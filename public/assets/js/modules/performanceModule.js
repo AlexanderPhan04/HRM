@@ -295,8 +295,8 @@ export class PerformanceModule {
     const empWithRatings = await Promise.all(
       employees.map(async (emp) => {
         const reviews = await this.getEmployeeReviews(emp.id);
-        const dept = departments.find((d) => d.id === emp.departmentId);
-        const pos = positions.find((p) => p.id === emp.positionId);
+        const dept = departments.find((d) => d.id === emp.department_id);
+        const pos = positions.find((p) => p.id === emp.position_id);
         const avgRating = await this.getAverageRating(emp.id);
 
         return {

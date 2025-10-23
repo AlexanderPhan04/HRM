@@ -119,8 +119,8 @@ export class SearchEmployeeModule {
     const criteria = {
       name: document.getElementById("search-name-pattern").value.trim(),
       id: document.getElementById("search-id-pattern").value.trim(),
-      departmentId: document.getElementById("search-department").value,
-      positionId: document.getElementById("search-position").value,
+      department_id: document.getElementById("search-department").value,
+      position_id: document.getElementById("search-position").value,
       minSalary:
         parseFloat(document.getElementById("search-min-salary").value) ||
         undefined,
@@ -171,17 +171,19 @@ export class SearchEmployeeModule {
     }
 
     // ============ Tìm kiếm theo phòng ban (exact match) ============
-    if (criteria.departmentId) {
+    if (criteria.department_id) {
       // Filter: chỉ giữ lại employees thuộc phòng ban được chọn
       results = results.filter(
-        (emp) => emp.departmentId === criteria.departmentId
+        (emp) => emp.department_id === criteria.department_id
       );
     }
 
     // ============ Tìm kiếm theo vị trí (exact match) ============
-    if (criteria.positionId) {
+    if (criteria.position_id) {
       // Filter: chỉ giữ lại employees có vị trí được chọn
-      results = results.filter((emp) => emp.positionId === criteria.positionId);
+      results = results.filter(
+        (emp) => emp.position_id === criteria.position_id
+      );
     }
 
     // ============ Tìm kiếm theo mức lương tối thiểu ============
@@ -289,10 +291,10 @@ export class SearchEmployeeModule {
                         ${this.currentResults
                           .map((emp) => {
                             const dept = departments.find(
-                              (d) => d.id === emp.departmentId
+                              (d) => d.id === emp.department_id
                             );
                             const pos = positions.find(
-                              (p) => p.id === emp.positionId
+                              (p) => p.id === emp.position_id
                             );
                             return `
                                 <tr>

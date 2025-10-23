@@ -36,7 +36,7 @@ export class DepartmentModule {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, description, managerId }),
+        body: JSON.stringify({ name, description, manager_id: managerId }),
       });
       const data = await response.json();
       if (!data.success) {

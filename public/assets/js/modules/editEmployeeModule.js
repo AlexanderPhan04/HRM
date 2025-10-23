@@ -114,10 +114,10 @@ export class EditEmployeeModule {
                         ${results
                           .map((emp) => {
                             const dept = departments.find(
-                              (d) => d.id === emp.departmentId
+                              (d) => d.id === emp.department_id
                             );
                             const pos = positions.find(
-                              (p) => p.id === emp.positionId
+                              (p) => p.id === emp.position_id
                             );
                             return `
                                 <tr>
@@ -215,7 +215,7 @@ export class EditEmployeeModule {
                                     (pos) =>
                                       `<option value="${pos.id}" ${
                                         pos.id ===
-                                        this.currentEmployee.positionId
+                                        this.currentEmployee.position_id
                                           ? "selected"
                                           : ""
                                       }>${pos.title}</option>`
@@ -281,8 +281,8 @@ export class EditEmployeeModule {
       name: document.getElementById("edit-name").value.trim(),
       email: document.getElementById("edit-email").value.trim(),
       phone: document.getElementById("edit-phone").value.trim(),
-      departmentId: document.getElementById("edit-department").value,
-      positionId: document.getElementById("edit-position").value,
+      department_id: document.getElementById("edit-department").value,
+      position_id: document.getElementById("edit-position").value,
       salary: parseFloat(document.getElementById("edit-salary").value),
       hireDate: document.getElementById("edit-hiredate").value,
       address: document.getElementById("edit-address").value.trim(),

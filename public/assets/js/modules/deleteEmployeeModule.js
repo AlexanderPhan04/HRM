@@ -113,10 +113,10 @@ export class DeleteEmployeeModule {
                         ${results
                           .map((emp) => {
                             const dept = departments.find(
-                              (d) => d.id === emp.departmentId
+                              (d) => d.id === emp.department_id
                             );
                             const pos = positions.find(
-                              (p) => p.id === emp.positionId
+                              (p) => p.id === emp.position_id
                             );
                             return `
                                 <tr id="emp-row-${emp.id}">
