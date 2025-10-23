@@ -154,10 +154,10 @@ export class AddEmployeeModule {
       name: document.getElementById("emp-name").value.trim(), // Trim khoảng trắng
       email: document.getElementById("emp-email").value.trim(),
       phone: document.getElementById("emp-phone").value.trim(),
-      departmentId: document.getElementById("emp-department").value, // Selected option value
-      positionId: document.getElementById("emp-position").value,
+      department_id: document.getElementById("emp-department").value, // Snake case cho API
+      position_id: document.getElementById("emp-position").value,
       salary: parseFloat(document.getElementById("emp-salary").value), // Convert string to number
-      hireDate: document.getElementById("emp-hiredate").value, // Date string (YYYY-MM-DD)
+      hire_date: document.getElementById("emp-hiredate").value, // Date string (YYYY-MM-DD)
       address: document.getElementById("emp-address").value.trim(),
       bonus: 0, // Default bonus = 0
       deduction: 0, // Default deduction = 0
@@ -227,12 +227,12 @@ export class AddEmployeeModule {
     }
 
     // ============ Validate phòng ban ============
-    if (!data.departmentId) {
+    if (!data.department_id) {
       return { isValid: false, message: "Vui lòng chọn phòng ban!" };
     }
 
     // ============ Validate vị trí ============
-    if (!data.positionId) {
+    if (!data.position_id) {
       return { isValid: false, message: "Vui lòng chọn vị trí!" };
     }
 
@@ -243,12 +243,12 @@ export class AddEmployeeModule {
     }
 
     // ============ Validate ngày tuyển dụng ============
-    if (!data.hireDate) {
+    if (!data.hire_date) {
       return { isValid: false, message: "Vui lòng chọn ngày vào làm!" };
     }
 
     // Parse string sang Date object để so sánh
-    const hireDate = new Date(data.hireDate);
+    const hireDate = new Date(data.hire_date);
     const today = new Date();
     // Business rule: Ngày vào làm không được là ngày trong tương lai
     if (hireDate > today) {

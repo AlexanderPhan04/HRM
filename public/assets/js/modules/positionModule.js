@@ -154,14 +154,14 @@ export class PositionModule {
                         ${positions
                           .map((pos) => {
                             const empCount = employees.filter(
-                              (e) => e.positionId === pos.id
+                              (e) => e.position_id === pos.id
                             ).length;
                             return `
                                 <tr id="pos-row-${pos.id}">
                                     <td>${pos.id}</td>
                                     <td>${pos.title}</td>
                                     <td>${this.formatCurrency(
-                                      pos.salaryBase
+                                      pos.salary_base
                                     )}</td>
                                     <td>${pos.description || ""}</td>
                                     <td>${empCount}</td>
@@ -222,7 +222,7 @@ export class PositionModule {
       alert("Thêm vị trí thành công!");
 
       // Render lại
-      const content = this.render(employeeDb);
+      const content = await this.render(employeeDb);
       document.getElementById("content-area").innerHTML = content;
       this.attachEventListeners(employeeDb);
     } catch (error) {
@@ -250,7 +250,7 @@ export class PositionModule {
                         <div class="form-group">
                             <label>Lương cơ bản (VNĐ) *</label>
                             <input type="number" id="edit-pos-salary" value="${
-                              pos.salaryBase
+                              pos.salary_base
                             }" min="0" step="100000" required>
                         </div>
                         <div class="form-group">

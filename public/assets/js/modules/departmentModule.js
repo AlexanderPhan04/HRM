@@ -162,10 +162,10 @@ export class DepartmentModule {
                         ${departments
                           .map((dept) => {
                             const manager = employees.find(
-                              (e) => e.id === dept.managerId
+                              (e) => e.id === dept.manager_id
                             );
                             const empCount = employees.filter(
-                              (e) => e.departmentId === dept.id
+                              (e) => e.department_id === dept.id
                             ).length;
                             return `
                                 <tr id="dept-row-${dept.id}">
@@ -230,7 +230,7 @@ export class DepartmentModule {
       alert("Thêm phòng ban thành công!");
 
       // Render lại
-      const content = this.render(employeeDb);
+      const content = await this.render(employeeDb);
       document.getElementById("content-area").innerHTML = content;
       this.attachEventListeners(employeeDb);
     } catch (error) {
