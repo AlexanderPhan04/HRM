@@ -7,11 +7,11 @@
 
 class Database
 {
-    // Thông tin kết nối database
-    private $host = "localhost";
-    private $db_name = "hrm_system";
-    private $username = "root";
-    private $password = "quan2004";
+    // Thông tin kết nối database - CẬP NHẬT CHO HOSTING
+    private $host = "localhost"; // Thường là localhost trên shared hosting
+    private $db_name = "your_username_hrm_system"; // Thay bằng tên database thực tế
+    private $username = "your_username_dbuser"; // Thay bằng username database
+    private $password = "your_strong_password"; // Thay bằng password mạnh
     private $conn = null;
 
     /**
