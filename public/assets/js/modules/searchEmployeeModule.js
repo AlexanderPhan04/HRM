@@ -10,9 +10,9 @@ export class SearchEmployeeModule {
   }
 
   // Render giao diện
-  render() {
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+  async render() {
+    const departments = (await this.departmentModule.getAllDepartments()) || [];
+    const positions = (await this.positionModule.getAllPositions()) || [];
 
     return `
             <div class="module-header">

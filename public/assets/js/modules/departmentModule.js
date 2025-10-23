@@ -1,108 +1,88 @@
-// DepartmentModule.js - Module quản lý phòng ban
+// DepartmentModule.js - Module quản lý phòng ban (sử dụng API backend)
 export class DepartmentModule {
   constructor() {
-    this.storageKey = "hrm_departments";
-    this.init();
+    this.apiBaseUrl = "api.php/departments";
   }
 
-  // Khởi tạo dữ liệu mặc định
-  init() {
-    if (!localStorage.getItem(this.storageKey)) {
-      this.initDefaultData();
+  // Lấy tất cả phòng ban từ API
+  async getAllDepartments() {
+    try {
+      const response = await fetch(this.apiBaseUrl);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      return [];
     }
   }
 
-  // Tạo dữ liệu mẫu
-  initDefaultData() {
-    const defaultDepartments = [
-      {
-        id: "DEP001",
-        name: "Phòng Kinh doanh",
-        managerId: "EMP001",
-        description: "Phòng kinh doanh và bán hàng",
-      },
-      {
-        id: "DEP002",
-        name: "Phòng Kỹ thuật",
-        managerId: "EMP002",
-        description: "Phòng phát triển sản phẩm",
-      },
-      {
-        id: "DEP003",
-        name: "Phòng Nhân sự",
-        managerId: null,
-        description: "Phòng quản lý nhân sự",
-      },
-      {
-        id: "DEP004",
-        name: "Phòng Kế toán",
-        managerId: null,
-        description: "Phòng tài chính kế toán",
-      },
-    ];
-    localStorage.setItem(this.storageKey, JSON.stringify(defaultDepartments));
+  // Lấy phòng ban theo ID từ API
+  async getDepartmentById(id) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${id}`);
+      const data = await response.json();
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error("Error fetching department:", error);
+      return null;
+    }
   }
 
-  // Lấy tất cả phòng ban
-  getAllDepartments() {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  // Lấy phòng ban theo ID
-  getDepartmentById(id) {
-    const departments = this.getAllDepartments();
-    return departments.find((dept) => dept.id === id);
-  }
-
-  // Lưu danh sách phòng ban
-  async saveDepartments(departments) {
-    await this.delay(300);
-    localStorage.setItem(this.storageKey, JSON.stringify(departments));
-  }
-
-  // Thêm phòng ban mới
+  // Thêm phòng ban mới qua API
   async addDepartment(name, description = "", managerId = null) {
-    const departments = this.getAllDepartments();
-    const newDepartment = {
-      id: this.generateDepartmentId(),
-      name,
-      description,
-      managerId,
-    };
-    departments.push(newDepartment);
-    await this.saveDepartments(departments);
-    return newDepartment;
+    try {
+      const response = await fetch(this.apiBaseUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, description, managerId }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Không thể thêm phòng ban");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  // Sửa phòng ban
+  // Sửa phòng ban qua API
   async editDepartment(id, updates) {
-    const departments = this.getAllDepartments();
-    const index = departments.findIndex((dept) => dept.id === id);
-
-    if (index !== -1) {
-      departments[index] = { ...departments[index], ...updates };
-      await this.saveDepartments(departments);
-      return true;
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      console.error("Error updating department:", error);
+      return false;
     }
-    return false;
   }
 
-  // Xóa phòng ban
+  // Xóa phòng ban qua API
   async deleteDepartment(id) {
-    const departments = this.getAllDepartments();
-    const filtered = departments.filter((dept) => dept.id !== id);
-
-    if (filtered.length < departments.length) {
-      await this.saveDepartments(filtered);
-      return true;
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      console.error("Error deleting department:", error);
+      return false;
     }
-    return false;
   }
 
-  // Tạo ID phòng ban mới
-  generateDepartmentId() {
-    const departments = this.getAllDepartments();
+  // Tạo ID phòng ban mới (server sẽ tự generate)
+  async generateDepartmentId() {
+    const departments = await this.getAllDepartments();
     if (departments.length === 0) {
       return "DEP001";
     }
@@ -117,9 +97,10 @@ export class DepartmentModule {
   }
 
   // Render giao diện
-  render(employeeDb) {
-    const departments = this.getAllDepartments();
-    const employees = employeeDb.getAllEmployees();
+  async render(employeeDb) {
+    const departments = await this.getAllDepartments();
+    const employees = await employeeDb.getAllEmployees();
+    const nextId = await this.generateDepartmentId();
 
     return `
             <div class="module-header">
@@ -134,7 +115,7 @@ export class DepartmentModule {
                     <div class="form-row">
                         <div class="form-group">
                             <label>Mã phòng ban</label>
-                            <input type="text" value="${this.generateDepartmentId()}" readonly>
+                            <input type="text" value="${nextId}" readonly>
                         </div>
                         <div class="form-group">
                             <label>Tên phòng ban *</label>
@@ -258,8 +239,8 @@ export class DepartmentModule {
   }
 
   // Hiển thị form sửa
-  showEditForm(deptId) {
-    const dept = this.getDepartmentById(deptId);
+  async showEditForm(deptId) {
+    const dept = await this.getDepartmentById(deptId);
     if (!dept) return;
 
     const modal = document.getElementById("edit-dept-modal");
@@ -307,7 +288,7 @@ export class DepartmentModule {
 
         // Reload module (needs to be called from app.js)
         if (window.currentEmployeeDb) {
-          const content = this.render(window.currentEmployeeDb);
+          const content = await this.render(window.currentEmployeeDb);
           document.getElementById("content-area").innerHTML = content;
           this.attachEventListeners(window.currentEmployeeDb);
         }
@@ -341,10 +322,5 @@ export class DepartmentModule {
     } catch (error) {
       alert("Có lỗi xảy ra: " + error.message);
     }
-  }
-
-  // Hàm delay
-  delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

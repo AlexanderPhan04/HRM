@@ -1,114 +1,88 @@
-// PositionModule.js - Module quản lý vị trí công việc
+// PositionModule.js - Module quản lý vị trí công việc (sử dụng API backend)
 export class PositionModule {
   constructor() {
-    this.storageKey = "hrm_positions";
-    this.init();
+    this.apiBaseUrl = "api.php/positions";
   }
 
-  // Khởi tạo dữ liệu mặc định
-  init() {
-    if (!localStorage.getItem(this.storageKey)) {
-      this.initDefaultData();
+  // Lấy tất cả vị trí từ API
+  async getAllPositions() {
+    try {
+      const response = await fetch(this.apiBaseUrl);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching positions:", error);
+      return [];
     }
   }
 
-  // Tạo dữ liệu mẫu
-  initDefaultData() {
-    const defaultPositions = [
-      {
-        id: "POS001",
-        title: "Giám đốc",
-        description: "Giám đốc công ty",
-        salaryBase: 30000000,
-      },
-      {
-        id: "POS002",
-        title: "Trưởng phòng",
-        description: "Quản lý phòng ban",
-        salaryBase: 20000000,
-      },
-      {
-        id: "POS003",
-        title: "Nhân viên chính thức",
-        description: "Nhân viên full-time",
-        salaryBase: 12000000,
-      },
-      {
-        id: "POS004",
-        title: "Nhân viên thử việc",
-        description: "Nhân viên đang thử việc",
-        salaryBase: 8000000,
-      },
-      {
-        id: "POS005",
-        title: "Thực tập sinh",
-        description: "Sinh viên thực tập",
-        salaryBase: 5000000,
-      },
-    ];
-    localStorage.setItem(this.storageKey, JSON.stringify(defaultPositions));
+  // Lấy vị trí theo ID từ API
+  async getPositionById(id) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${id}`);
+      const data = await response.json();
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error("Error fetching position:", error);
+      return null;
+    }
   }
 
-  // Lấy tất cả vị trí
-  getAllPositions() {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  // Lấy vị trí theo ID
-  getPositionById(id) {
-    const positions = this.getAllPositions();
-    return positions.find((pos) => pos.id === id);
-  }
-
-  // Lưu danh sách vị trí
-  async savePositions(positions) {
-    await this.delay(300);
-    localStorage.setItem(this.storageKey, JSON.stringify(positions));
-  }
-
-  // Thêm vị trí mới
+  // Thêm vị trí mới qua API
   async addPosition(title, description = "", salaryBase = 0) {
-    const positions = this.getAllPositions();
-    const newPosition = {
-      id: this.generatePositionId(),
-      title,
-      description,
-      salaryBase,
-    };
-    positions.push(newPosition);
-    await this.savePositions(positions);
-    return newPosition;
+    try {
+      const response = await fetch(this.apiBaseUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title, description, salaryBase }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Không thể thêm vị trí");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  // Sửa vị trí
+  // Sửa vị trí qua API
   async editPosition(id, updates) {
-    const positions = this.getAllPositions();
-    const index = positions.findIndex((pos) => pos.id === id);
-
-    if (index !== -1) {
-      positions[index] = { ...positions[index], ...updates };
-      await this.savePositions(positions);
-      return true;
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      console.error("Error updating position:", error);
+      return false;
     }
-    return false;
   }
 
-  // Xóa vị trí
+  // Xóa vị trí qua API
   async deletePosition(id) {
-    const positions = this.getAllPositions();
-    const filtered = positions.filter((pos) => pos.id !== id);
-
-    if (filtered.length < positions.length) {
-      await this.savePositions(filtered);
-      return true;
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      console.error("Error deleting position:", error);
+      return false;
     }
-    return false;
   }
 
-  // Tạo ID vị trí mới
-  generatePositionId() {
-    const positions = this.getAllPositions();
+  // Tạo ID vị trí mới (server sẽ tự generate)
+  async generatePositionId() {
+    const positions = await this.getAllPositions();
     if (positions.length === 0) {
       return "POS001";
     }
@@ -123,9 +97,10 @@ export class PositionModule {
   }
 
   // Render giao diện
-  render(employeeDb) {
-    const positions = this.getAllPositions();
-    const employees = employeeDb.getAllEmployees();
+  async render(employeeDb) {
+    const positions = await this.getAllPositions();
+    const employees = await employeeDb.getAllEmployees();
+    const nextId = await this.generatePositionId();
 
     return `
             <div class="module-header">
@@ -140,7 +115,7 @@ export class PositionModule {
                     <div class="form-row">
                         <div class="form-group">
                             <label>Mã vị trí</label>
-                            <input type="text" value="${this.generatePositionId()}" readonly>
+                            <input type="text" value="${nextId}" readonly>
                         </div>
                         <div class="form-group">
                             <label>Tên vị trí *</label>
@@ -256,8 +231,8 @@ export class PositionModule {
   }
 
   // Hiển thị form sửa
-  showEditForm(posId) {
-    const pos = this.getPositionById(posId);
+  async showEditForm(posId) {
+    const pos = await this.getPositionById(posId);
     if (!pos) return;
 
     const modal = document.getElementById("edit-pos-modal");
@@ -312,7 +287,7 @@ export class PositionModule {
         this.closeEditForm();
 
         if (window.currentEmployeeDb) {
-          const content = this.render(window.currentEmployeeDb);
+          const content = await this.render(window.currentEmployeeDb);
           document.getElementById("content-area").innerHTML = content;
           this.attachEventListeners(window.currentEmployeeDb);
         }
@@ -354,10 +329,5 @@ export class PositionModule {
       style: "currency",
       currency: "VND",
     }).format(amount);
-  }
-
-  // Hàm delay
-  delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

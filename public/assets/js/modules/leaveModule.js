@@ -1,34 +1,24 @@
-// LeaveModule.js - Module quản lý nghỉ phép
+// LeaveModule.js - Module quản lý nghỉ phép (sử dụng API backend)
 export class LeaveModule {
   constructor(employeeDb) {
     this.employeeDb = employeeDb;
-    this.storageKey = "hrm_leaves";
-    this.init();
+    this.apiBaseUrl = "api.php/leaves";
   }
 
-  // Khởi tạo
-  init() {
-    if (!localStorage.getItem(this.storageKey)) {
-      localStorage.setItem(this.storageKey, JSON.stringify([]));
+  // Lấy tất cả yêu cầu nghỉ phép từ API
+  async getAllLeaves() {
+    try {
+      const response = await fetch(this.apiBaseUrl);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching leaves:", error);
+      return [];
     }
   }
 
-  // Lấy tất cả yêu cầu nghỉ phép
-  getAllLeaves() {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  // Lưu danh sách nghỉ phép
-  async saveLeaves(leaves) {
-    await this.delay(300);
-    localStorage.setItem(this.storageKey, JSON.stringify(leaves));
-  }
-
-  // Yêu cầu nghỉ phép
+  // Yêu cầu nghỉ phép qua API
   async requestLeave(employeeId, startDate, endDate, type, reason = "") {
-    const leaves = this.getAllLeaves();
-
     // Kiểm tra ngày hợp lệ
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -40,76 +30,84 @@ export class LeaveModule {
     // Tính số ngày
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-    const newLeave = {
-      id: this.generateLeaveId(),
-      employeeId,
-      startDate,
-      endDate,
-      type, // annual, sick
-      reason,
-      days,
-      status: "pending", // pending, approved, rejected
-      requestDate: new Date().toISOString(),
-      approvedBy: null,
-      approvedDate: null,
-    };
-
-    leaves.push(newLeave);
-    await this.saveLeaves(leaves);
-    return newLeave;
-  }
-
-  // Phê duyệt nghỉ phép
-  async approveLeave(leaveId, approved = true) {
-    const leaves = this.getAllLeaves();
-    const leave = leaves.find((l) => l.id === leaveId);
-
-    if (!leave) {
-      throw new Error("Không tìm thấy yêu cầu!");
+    try {
+      const response = await fetch(this.apiBaseUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employeeId,
+          startDate,
+          endDate,
+          type,
+          reason,
+          days,
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Không thể tạo yêu cầu nghỉ phép");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
     }
-
-    leave.status = approved ? "approved" : "rejected";
-    leave.approvedDate = new Date().toISOString();
-
-    await this.saveLeaves(leaves);
-    return leave;
   }
 
-  // Lấy số ngày phép còn lại (sử dụng filter và reduce)
-  getLeaveBalance(employeeId) {
-    const defaultAnnualLeave = 20; // Quy định: mỗi nhân viên có 20 ngày phép năm
-    // Lấy tất cả các yêu cầu nghỉ phép từ localStorage
-    const leaves = this.getAllLeaves();
-
-    // Tính tổng số ngày đã nghỉ (chỉ tính những đơn đã approved)
-    const usedDays = leaves
-      .filter(
-        // Bước 1: Lọc các yêu cầu nghỉ phép theo điều kiện
-        (l) =>
-          l.employeeId === employeeId && // Của nhân viên này
-          l.status === "approved" && // Đã được phê duyệt
-          l.type === "annual" // Chỉ tính nghỉ phép năm (không tính sick leave)
-      )
-      .reduce((sum, l) => sum + l.days, 0); // Bước 2: Cộng dồn số ngày (reduce)
-
-    // Trả về object chứa thông tin về số ngày phép
-    return {
-      total: defaultAnnualLeave, // Tổng số ngày được phép nghỉ
-      used: usedDays, // Số ngày đã sử dụng
-      remaining: defaultAnnualLeave - usedDays, // Số ngày còn lại
-    };
+  // Phê duyệt nghỉ phép qua API
+  async approveLeave(leaveId, approved = true) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${leaveId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: approved ? "approved" : "rejected",
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Không thể cập nhật trạng thái");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  // Tạo ID nghỉ phép mới
-  generateLeaveId() {
-    return "LEAVE" + Date.now();
+  // Lấy số ngày phép còn lại từ API
+  async getLeaveBalance(employeeId) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/balance?employeeId=${employeeId}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        return data.data;
+      }
+      // Fallback nếu API không có
+      return { total: 20, used: 0, remaining: 20 };
+    } catch (error) {
+      console.error("Error fetching leave balance:", error);
+      return { total: 20, used: 0, remaining: 20 };
+    }
   }
 
   // Render giao diện
-  render() {
-    const employees = this.employeeDb.getAllEmployees();
-    const leaves = this.getAllLeaves();
+  async render() {
+    const employees = await this.employeeDb.getAllEmployees();
+    const leaves = await this.getAllLeaves();
     const pendingLeaves = leaves.filter((l) => l.status === "pending");
+
+    // Lấy balance cho tất cả employees
+    const employeesWithBalance = await Promise.all(
+      employees.map(async (emp) => {
+        const balance = await this.getLeaveBalance(emp.id);
+        return { ...emp, balance };
+      })
+    );
 
     return `
             <div class="module-header">
@@ -126,12 +124,9 @@ export class LeaveModule {
                             <label>Nhân viên *</label>
                             <select id="leave-employee" required>
                                 <option value="">-- Chọn nhân viên --</option>
-                                ${employees
+                                ${employeesWithBalance
                                   .map((emp) => {
-                                    const balance = this.getLeaveBalance(
-                                      emp.id
-                                    );
-                                    return `<option value="${emp.id}">${emp.name} - Còn ${balance.remaining} ngày</option>`;
+                                    return `<option value="${emp.id}">${emp.name} - Còn ${emp.balance.remaining} ngày</option>`;
                                   })
                                   .join("")}
                             </select>
@@ -282,15 +277,15 @@ export class LeaveModule {
         type,
         reason
       );
-      const emp = this.employeeDb.getEmployeeById(employeeId);
+      const emp = await this.employeeDb.getEmployeeById(employeeId);
       this.showMessage(
         `Yêu cầu nghỉ phép cho ${emp.name} đã được gửi (${leave.days} ngày)`,
         "success"
       );
 
       // Refresh
-      setTimeout(() => {
-        const content = this.render();
+      setTimeout(async () => {
+        const content = await this.render();
         document.getElementById("content-area").innerHTML = content;
         this.attachEventListeners();
       }, 1500);
@@ -303,7 +298,7 @@ export class LeaveModule {
   async handleApprove(leaveId, approved) {
     try {
       const leave = await this.approveLeave(leaveId, approved);
-      const emp = this.employeeDb.getEmployeeById(leave.employeeId);
+      const emp = await this.employeeDb.getEmployeeById(leave.employeeId);
       const action = approved ? "đã được duyệt" : "đã bị từ chối";
       alert(`Yêu cầu nghỉ phép của ${emp.name} ${action}!`);
 
@@ -316,8 +311,9 @@ export class LeaveModule {
   }
 
   // Hiển thị lịch sử
-  showHistory() {
-    const leaves = this.getAllLeaves();
+  async showHistory() {
+    const leaves = await this.getAllLeaves();
+    const employees = await this.employeeDb.getAllEmployees();
     const approvedOrRejected = leaves.filter((l) => l.status !== "pending");
 
     const typeNames = {
@@ -349,8 +345,8 @@ export class LeaveModule {
                 <tbody>
                     ${approvedOrRejected
                       .map((leave) => {
-                        const emp = this.employeeDb.getEmployeeById(
-                          leave.employeeId
+                        const emp = employees.find(
+                          (e) => e.id === leave.employeeId
                         );
                         return `
                             <tr>
@@ -395,10 +391,5 @@ export class LeaveModule {
     setTimeout(() => {
       msgDiv.innerHTML = "";
     }, 5000);
-  }
-
-  // Hàm delay
-  delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

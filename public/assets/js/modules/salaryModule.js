@@ -20,35 +20,39 @@ export class SalaryModule {
   }
 
   // Tạo báo cáo lương (sử dụng map - higher-order function)
-  generatePayrollReport() {
+  async generatePayrollReport() {
     // Lấy danh sách tất cả nhân viên từ employeeDb
-    const employees = this.employeeDb.getAllEmployees();
+    const employees = await this.employeeDb.getAllEmployees();
 
-    // Sử dụng map để transform mỗi employee thành payroll record
-    return employees.map((emp) => {
-      // Tính lương thực nhận cho nhân viên này
-      const netSalary = this.calculateNetSalary(emp);
-      // Lấy thông tin phòng ban từ departmentId
-      const department = this.departmentModule.getDepartmentById(
-        emp.departmentId
-      );
-      // Lấy thông tin vị trí từ positionId
-      const position = this.positionModule.getPositionById(emp.positionId);
+    // Sử dụng Promise.all với map để transform mỗi employee thành payroll record
+    return await Promise.all(
+      employees.map(async (emp) => {
+        // Tính lương thực nhận cho nhân viên này
+        const netSalary = this.calculateNetSalary(emp);
+        // Lấy thông tin phòng ban từ departmentId
+        const department = await this.departmentModule.getDepartmentById(
+          emp.departmentId
+        );
+        // Lấy thông tin vị trí từ positionId
+        const position = await this.positionModule.getPositionById(
+          emp.positionId
+        );
 
-      // Trả về object mới với thông tin đầy đủ
-      return {
-        ...emp, // Spread operator: copy tất cả properties của emp
-        // Ternary operator: department ? truthy : falsy
-        departmentName: department ? department.name : "N/A",
-        positionTitle: position ? position.title : "N/A",
-        netSalary, // ES6 shorthand (equivalent to netSalary: netSalary)
-      };
-    });
+        // Trả về object mới với thông tin đầy đủ
+        return {
+          ...emp, // Spread operator: copy tất cả properties của emp
+          // Ternary operator: department ? truthy : falsy
+          departmentName: department ? department.name : "N/A",
+          positionTitle: position ? position.title : "N/A",
+          netSalary, // ES6 shorthand (equivalent to netSalary: netSalary)
+        };
+      })
+    );
   }
 
   // Render giao diện
-  render() {
-    const payroll = this.generatePayrollReport();
+  async render() {
+    const payroll = await this.generatePayrollReport();
 
     // Tính tổng lương - sử dụng reduce
     const totalBaseSalary = payroll.reduce(

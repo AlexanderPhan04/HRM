@@ -1,131 +1,84 @@
-// AttendanceModule.js - Module theo dõi chấm công
+// AttendanceModule.js - Module theo dõi chấm công (sử dụng API backend)
 export class AttendanceModule {
   constructor(employeeDb) {
     this.employeeDb = employeeDb;
-    this.storageKey = "hrm_attendance";
-    this.init();
+    this.apiBaseUrl = "api.php/attendance";
   }
 
-  // Khởi tạo
-  init() {
-    if (!localStorage.getItem(this.storageKey)) {
-      localStorage.setItem(this.storageKey, JSON.stringify([]));
+  // Lấy tất cả attendance logs từ API
+  async getAllAttendance() {
+    try {
+      const response = await fetch(this.apiBaseUrl);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      return [];
     }
   }
 
-  // Lấy tất cả attendance logs
-  getAllAttendance() {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  // Lưu attendance logs
-  async saveAttendance(logs) {
-    await this.delay(300);
-    localStorage.setItem(this.storageKey, JSON.stringify(logs));
-  }
-
-  // Check-in
+  // Check-in qua API
   async checkIn(employeeId) {
-    const logs = this.getAllAttendance();
-    const today = new Date().toISOString().split("T")[0];
-
-    // Kiểm tra đã check-in chưa
-    const existing = logs.find(
-      (log) =>
-        log.employeeId === employeeId && log.date === today && log.checkIn
-    );
-
-    if (existing) {
-      throw new Error("Đã check-in hôm nay rồi!");
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/check-in`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ employeeId }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Check-in thất bại");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
     }
-
-    const newLog = {
-      id: this.generateLogId(),
-      employeeId,
-      date: today,
-      checkIn: new Date().toTimeString().split(" ")[0],
-      checkOut: null,
-      totalHours: 0,
-    };
-
-    logs.push(newLog);
-    await this.saveAttendance(logs);
-    return newLog;
   }
 
-  // Check-out
+  // Check-out qua API
   async checkOut(employeeId) {
-    const logs = this.getAllAttendance();
-    const today = new Date().toISOString().split("T")[0];
-
-    const log = logs.find(
-      (l) =>
-        l.employeeId === employeeId &&
-        l.date === today &&
-        l.checkIn &&
-        !l.checkOut
-    );
-
-    if (!log) {
-      throw new Error("Chưa check-in hoặc đã check-out rồi!");
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/check-out`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ employeeId }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Check-out thất bại");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
     }
-
-    log.checkOut = new Date().toTimeString().split(" ")[0];
-    log.totalHours = this.calculateHours(log.checkIn, log.checkOut);
-
-    await this.saveAttendance(logs);
-    return log;
   }
 
-  // Tính số giờ làm việc (sử dụng Date object và phép toán thời gian)
-  calculateHours(checkIn, checkOut) {
-    // Parse checkIn time: split chuỗi "HH:MM:SS" thành array và convert sang số
-    // Ví dụ: "08:30:00" => ["08", "30", "00"] => [8, 30, 0]
-    const [h1, m1, s1] = checkIn.split(":").map(Number);
-    // Parse checkOut time tương tự
-    const [h2, m2, s2] = checkOut.split(":").map(Number);
+  // Lấy báo cáo chấm công theo nhân viên và khoảng thời gian từ API
+  async getAttendanceReport(employeeId, fromDate, toDate) {
+    try {
+      const params = new URLSearchParams();
+      if (employeeId) params.append("employeeId", employeeId);
+      if (fromDate) params.append("fromDate", fromDate);
+      if (toDate) params.append("toDate", toDate);
 
-    // Tạo Date object cho thời điểm check-in
-    const start = new Date();
-    // Set giờ, phút, giây cho check-in
-    start.setHours(h1, m1, s1);
-
-    // Tạo Date object cho thời điểm check-out
-    const end = new Date();
-    // Set giờ, phút, giây cho check-out
-    end.setHours(h2, m2, s2);
-
-    // Tính khoảng thời gian chênh lệch (milliseconds)
-    // Chia cho 1000 để ra giây, 60 để ra phút, 60 lần nữa để ra giờ
-    const diff = (end - start) / (1000 * 60 * 60); // Convert to hours
-
-    // Trả về số giờ dương (Math.max đảm bảo không âm nếu có lỗi dữ liệu)
-    return Math.max(0, diff);
-  }
-
-  // Lấy báo cáo chấm công theo nhân viên và khoảng thời gian
-  getAttendanceReport(employeeId, fromDate, toDate) {
-    const logs = this.getAllAttendance();
-
-    return logs.filter((log) => {
-      if (employeeId && log.employeeId !== employeeId) return false;
-      if (fromDate && log.date < fromDate) return false;
-      if (toDate && log.date > toDate) return false;
-      return true;
-    });
-  }
-
-  // Tạo ID log mới
-  generateLogId() {
-    return "ATT" + Date.now();
+      const response = await fetch(`${this.apiBaseUrl}/report?${params}`);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching report:", error);
+      return [];
+    }
   }
 
   // Render giao diện
-  render() {
-    const employees = this.employeeDb.getAllEmployees();
+  async render() {
+    const employees = await this.employeeDb.getAllEmployees();
     const today = new Date().toISOString().split("T")[0];
-    const logs = this.getAllAttendance();
+    const logs = await this.getAllAttendance();
 
     // Lấy trạng thái check-in hôm nay
     const todayLogs = logs.filter((l) => l.date === today);
@@ -275,15 +228,15 @@ export class AttendanceModule {
 
     try {
       const log = await this.checkIn(employeeId);
-      const emp = this.employeeDb.getEmployeeById(employeeId);
+      const emp = await this.employeeDb.getEmployeeById(employeeId);
       this.showMessage(
         `Check-in thành công cho ${emp.name} lúc ${log.checkIn}`,
         "success"
       );
 
       // Refresh
-      setTimeout(() => {
-        const content = this.render();
+      setTimeout(async () => {
+        const content = await this.render();
         document.getElementById("content-area").innerHTML = content;
         this.attachEventListeners();
       }, 1500);
@@ -302,7 +255,7 @@ export class AttendanceModule {
 
     try {
       const log = await this.checkOut(employeeId);
-      const emp = this.employeeDb.getEmployeeById(employeeId);
+      const emp = await this.employeeDb.getEmployeeById(employeeId);
       this.showMessage(
         `Check-out thành công cho ${emp.name} lúc ${
           log.checkOut
@@ -311,8 +264,8 @@ export class AttendanceModule {
       );
 
       // Refresh
-      setTimeout(() => {
-        const content = this.render();
+      setTimeout(async () => {
+        const content = await this.render();
         document.getElementById("content-area").innerHTML = content;
         this.attachEventListeners();
       }, 1500);
@@ -322,12 +275,12 @@ export class AttendanceModule {
   }
 
   // Hiển thị báo cáo
-  showReport() {
+  async showReport() {
     const employeeId = document.getElementById("report-employee").value;
     const fromDate = document.getElementById("report-from").value;
     const toDate = document.getElementById("report-to").value;
 
-    const report = this.getAttendanceReport(employeeId, fromDate, toDate);
+    const report = await this.getAttendanceReport(employeeId, fromDate, toDate);
 
     // Tính tổng giờ làm
     const totalHours = report.reduce((sum, log) => sum + log.totalHours, 0);
@@ -405,10 +358,5 @@ export class AttendanceModule {
     return new Date(date.getFullYear(), date.getMonth(), 1)
       .toISOString()
       .split("T")[0];
-  }
-
-  // Hàm delay
-  delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

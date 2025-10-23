@@ -49,7 +49,7 @@ export class DeleteEmployeeModule {
   }
 
   // Xử lý tìm kiếm
-  handleSearch() {
+  async handleSearch() {
     const searchId = document.getElementById("delete-search-id").value.trim();
     const searchName = document
       .getElementById("delete-search-name")
@@ -58,23 +58,25 @@ export class DeleteEmployeeModule {
     let results = [];
 
     if (searchId) {
-      const employee = this.employeeDb.getEmployeeById(searchId);
+      const employee = await this.employeeDb.getEmployeeById(searchId);
       if (employee) {
         results = [employee];
       }
     } else if (searchName) {
       const regex = new RegExp(searchName, "i");
-      results = this.employeeDb.filterEmployees((emp) => regex.test(emp.name));
+      results = await this.employeeDb.filterEmployees((emp) =>
+        regex.test(emp.name)
+      );
     } else {
       alert("Vui lòng nhập mã hoặc tên nhân viên để tìm kiếm!");
       return;
     }
 
-    this.displayResults(results);
+    await this.displayResults(results);
   }
 
   // Hiển thị kết quả
-  displayResults(results) {
+  async displayResults(results) {
     const container = document.getElementById("delete-results");
 
     if (results.length === 0) {
@@ -89,8 +91,8 @@ export class DeleteEmployeeModule {
       return;
     }
 
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+    const departments = (await this.departmentModule.getAllDepartments()) || [];
+    const positions = (await this.positionModule.getAllPositions()) || [];
 
     container.innerHTML = `
             <div class="card">

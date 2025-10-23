@@ -53,30 +53,32 @@ export class EditEmployeeModule {
   }
 
   // Xử lý tìm kiếm
-  handleSearch() {
+  async handleSearch() {
     const searchId = document.getElementById("search-id").value.trim();
     const searchName = document.getElementById("search-name").value.trim();
 
     let results = [];
 
     if (searchId) {
-      const employee = this.employeeDb.getEmployeeById(searchId);
+      const employee = await this.employeeDb.getEmployeeById(searchId);
       if (employee) {
         results = [employee];
       }
     } else if (searchName) {
       const regex = new RegExp(searchName, "i");
-      results = this.employeeDb.filterEmployees((emp) => regex.test(emp.name));
+      results = await this.employeeDb.filterEmployees((emp) =>
+        regex.test(emp.name)
+      );
     } else {
       alert("Vui lòng nhập mã hoặc tên nhân viên để tìm kiếm!");
       return;
     }
 
-    this.displaySearchResults(results);
+    await this.displaySearchResults(results);
   }
 
   // Hiển thị kết quả tìm kiếm
-  displaySearchResults(results) {
+  async displaySearchResults(results) {
     const container = document.getElementById("search-results");
 
     if (results.length === 0) {
@@ -91,8 +93,8 @@ export class EditEmployeeModule {
       return;
     }
 
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+    const departments = (await this.departmentModule.getAllDepartments()) || [];
+    const positions = (await this.positionModule.getAllPositions()) || [];
 
     container.innerHTML = `
             <div class="card">
@@ -142,16 +144,16 @@ export class EditEmployeeModule {
   }
 
   // Load form chỉnh sửa
-  loadEditForm(employeeId) {
-    this.currentEmployee = this.employeeDb.getEmployeeById(employeeId);
+  async loadEditForm(employeeId) {
+    this.currentEmployee = await this.employeeDb.getEmployeeById(employeeId);
 
     if (!this.currentEmployee) {
       alert("Không tìm thấy nhân viên!");
       return;
     }
 
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+    const departments = (await this.departmentModule.getAllDepartments()) || [];
+    const positions = (await this.positionModule.getAllPositions()) || [];
 
     const container = document.getElementById("edit-form-container");
     container.innerHTML = `

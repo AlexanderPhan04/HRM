@@ -1,112 +1,102 @@
-// PerformanceModule.js - Module đánh giá hiệu suất
+// PerformanceModule.js - Module đánh giá hiệu suất (sử dụng API backend)
 export class PerformanceModule {
   constructor(employeeDb, departmentModule, positionModule) {
     this.employeeDb = employeeDb;
     this.departmentModule = departmentModule;
     this.positionModule = positionModule;
-    this.storageKey = "hrm_performance";
-    this.init();
+    this.apiBaseUrl = "api.php/performance";
   }
 
-  // Khởi tạo
-  init() {
-    if (!localStorage.getItem(this.storageKey)) {
-      localStorage.setItem(this.storageKey, JSON.stringify([]));
+  // Lấy tất cả đánh giá từ API
+  async getAllReviews() {
+    try {
+      const response = await fetch(this.apiBaseUrl);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      return [];
     }
   }
 
-  // Lấy tất cả đánh giá
-  getAllReviews() {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  // Lưu danh sách đánh giá
-  async saveReviews(reviews) {
-    await this.delay(300);
-    localStorage.setItem(this.storageKey, JSON.stringify(reviews));
-  }
-
-  // Thêm đánh giá
+  // Thêm đánh giá qua API
   async addReview(employeeId, rating, feedback = "", reviewDate = null) {
     if (rating < 1 || rating > 5) {
       throw new Error("Điểm đánh giá phải từ 1 đến 5!");
     }
 
-    const reviews = this.getAllReviews();
-    const newReview = {
-      id: this.generateReviewId(),
-      employeeId,
-      rating,
-      feedback,
-      date: reviewDate || new Date().toISOString().split("T")[0],
-      createdAt: new Date().toISOString(),
-    };
-
-    reviews.push(newReview);
-    await this.saveReviews(reviews);
-    return newReview;
+    try {
+      const response = await fetch(this.apiBaseUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employeeId,
+          rating,
+          feedback,
+          date: reviewDate || new Date().toISOString().split("T")[0],
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Không thể thêm đánh giá");
+      }
+      return data.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  // Lấy điểm trung bình của nhân viên (sử dụng filter và reduce - higher-order functions)
-  getAverageRating(employeeId) {
-    // Lấy tất cả đánh giá từ localStorage
-    const reviews = this.getAllReviews();
-
-    // Filter: Lọc ra chỉ những đánh giá của nhân viên này
-    const empReviews = reviews.filter((r) => r.employeeId === employeeId);
-
-    // Nếu chưa có đánh giá nào, trả về 0
-    if (empReviews.length === 0) {
+  // Lấy điểm trung bình của nhân viên từ API
+  async getAverageRating(employeeId) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/average/${employeeId}`);
+      const data = await response.json();
+      return data.success ? data.data.average : 0;
+    } catch (error) {
+      console.error("Error fetching average rating:", error);
       return 0;
     }
-
-    // Reduce: Cộng dồn tất cả rating để tính tổng điểm
-    // sum: accumulator (tổng tích lũy), review: element hiện tại
-    // 0: giá trị khởi tạo của sum
-    const total = empReviews.reduce((sum, review) => sum + review.rating, 0);
-
-    // Tính trung bình: Tổng điểm / Số lượng đánh giá
-    return total / empReviews.length;
   }
 
-  // Lấy tất cả đánh giá của nhân viên
-  getEmployeeReviews(employeeId) {
-    const reviews = this.getAllReviews();
-    return reviews.filter((r) => r.employeeId === employeeId);
+  // Lấy tất cả đánh giá của nhân viên từ API
+  async getEmployeeReviews(employeeId) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/employee/${employeeId}`);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching employee reviews:", error);
+      return [];
+    }
   }
 
-  // Tạo ID đánh giá mới
-  generateReviewId() {
-    return "PERF" + Date.now();
-  }
-
-  // Lấy top performers (sử dụng map, filter, sort - higher-order functions)
-  getTopPerformers(limit = 10) {
-    // Lấy toàn bộ nhân viên từ database
-    const employees = this.employeeDb.getAllEmployees();
-
-    // Map: Transform mỗi employee, thêm thông tin rating
-    const empWithRatings = employees.map((emp) => ({
-      ...emp, // Spread: copy tất cả properties của employee
-      avgRating: this.getAverageRating(emp.id), // Thêm điểm trung bình
-      reviewCount: this.getEmployeeReviews(emp.id).length, // Thêm số lượng đánh giá
-    }));
-
-    // Filter: Chỉ lấy những nhân viên có ít nhất 1 đánh giá
-    const withReviews = empWithRatings.filter((e) => e.reviewCount > 0);
-
-    // Sort: Sắp xếp theo điểm trung bình giảm dần (descending)
-    // Slice: Cắt mảng để chỉ lấy top N nhân viên
-    return withReviews
-      .sort((a, b) => b.avgRating - a.avgRating) // b - a: sắp xếp giảm dần
-      .slice(0, limit); // Lấy từ index 0 đến limit
+  // Lấy top performers từ API
+  async getTopPerformers(limit = 10) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/top?limit=${limit}`);
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error("Error fetching top performers:", error);
+      return [];
+    }
   }
 
   // Render giao diện
-  render() {
-    const employees = this.employeeDb.getAllEmployees();
-    const topPerformers = this.getTopPerformers(5);
+  async render() {
+    const employees = await this.employeeDb.getAllEmployees();
+    const departments = await this.departmentModule.getAllDepartments();
+    const topPerformers = await this.getTopPerformers(5);
+
+    // Get average ratings for all employees
+    const employeesWithRating = await Promise.all(
+      employees.map(async (emp) => {
+        const avg = await this.getAverageRating(emp.id);
+        return { ...emp, avgRating: avg };
+      })
+    );
 
     return `
             <div class="module-header">
@@ -139,20 +129,25 @@ export class PerformanceModule {
                         <tbody>
                             ${topPerformers
                               .map((emp, index) => {
-                                const dept =
-                                  this.departmentModule.getDepartmentById(
-                                    emp.departmentId
-                                  );
+                                const dept = departments.find(
+                                  (d) => d.id === emp.departmentId
+                                );
                                 return `
                                     <tr>
                                         <td><strong>#${index + 1}</strong></td>
                                         <td>${emp.id}</td>
                                         <td>${emp.name}</td>
                                         <td>${dept ? dept.name : "N/A"}</td>
-                                        <td>⭐ ${emp.avgRating.toFixed(
-                                          2
-                                        )}/5</td>
-                                        <td>${emp.reviewCount}</td>
+                                        <td>⭐ ${(
+                                          emp.avgRating ||
+                                          emp.average_rating ||
+                                          0
+                                        ).toFixed(2)}/5</td>
+                                        <td>${
+                                          emp.reviewCount ||
+                                          emp.review_count ||
+                                          0
+                                        }</td>
                                     </tr>
                                 `;
                               })
@@ -172,11 +167,12 @@ export class PerformanceModule {
                             <label>Nhân viên *</label>
                             <select id="review-employee" required>
                                 <option value="">-- Chọn nhân viên --</option>
-                                ${employees
+                                ${employeesWithRating
                                   .map((emp) => {
-                                    const avg = this.getAverageRating(emp.id);
                                     const avgText =
-                                      avg > 0 ? ` (TB: ${avg.toFixed(2)})` : "";
+                                      emp.avgRating > 0
+                                        ? ` (TB: ${emp.avgRating.toFixed(2)})`
+                                        : "";
                                     return `<option value="${emp.id}">${emp.name}${avgText}</option>`;
                                   })
                                   .join("")}
@@ -265,7 +261,7 @@ export class PerformanceModule {
 
     try {
       await this.addReview(employeeId, rating, feedback, date);
-      const emp = this.employeeDb.getEmployeeById(employeeId);
+      const emp = await this.employeeDb.getEmployeeById(employeeId);
       this.showMessage(
         `Đã thêm đánh giá cho ${emp.name} với ${rating} sao`,
         "success"
@@ -278,8 +274,8 @@ export class PerformanceModule {
         .split("T")[0];
 
       // Refresh
-      setTimeout(() => {
-        const content = this.render();
+      setTimeout(async () => {
+        const content = await this.render();
         document.getElementById("content-area").innerHTML = content;
         this.attachEventListeners();
       }, 1500);
@@ -289,22 +285,27 @@ export class PerformanceModule {
   }
 
   // Hiển thị tất cả đánh giá
-  showAllRatings() {
-    const employees = this.employeeDb.getAllEmployees();
+  async showAllRatings() {
+    const employees = await this.employeeDb.getAllEmployees();
+    const departments = await this.departmentModule.getAllDepartments();
+    const positions = await this.positionModule.getAllPositions();
 
-    const empWithRatings = employees.map((emp) => {
-      const reviews = this.getEmployeeReviews(emp.id);
-      const dept = this.departmentModule.getDepartmentById(emp.departmentId);
-      const pos = this.positionModule.getPositionById(emp.positionId);
+    const empWithRatings = await Promise.all(
+      employees.map(async (emp) => {
+        const reviews = await this.getEmployeeReviews(emp.id);
+        const dept = departments.find((d) => d.id === emp.departmentId);
+        const pos = positions.find((p) => p.id === emp.positionId);
+        const avgRating = await this.getAverageRating(emp.id);
 
-      return {
-        ...emp,
-        departmentName: dept ? dept.name : "N/A",
-        positionTitle: pos ? pos.title : "N/A",
-        avgRating: this.getAverageRating(emp.id),
-        reviewCount: reviews.length,
-      };
-    });
+        return {
+          ...emp,
+          departmentName: dept ? dept.name : "N/A",
+          positionTitle: pos ? pos.title : "N/A",
+          avgRating,
+          reviewCount: reviews.length,
+        };
+      })
+    );
 
     const container = document.getElementById("all-ratings");
     container.innerHTML = `
@@ -356,10 +357,10 @@ export class PerformanceModule {
   }
 
   // Hiển thị đánh giá của một nhân viên
-  showEmployeeReviews(employeeId) {
-    const employee = this.employeeDb.getEmployeeById(employeeId);
-    const reviews = this.getEmployeeReviews(employeeId);
-    const avgRating = this.getAverageRating(employeeId);
+  async showEmployeeReviews(employeeId) {
+    const employee = await this.employeeDb.getEmployeeById(employeeId);
+    const reviews = await this.getEmployeeReviews(employeeId);
+    const avgRating = await this.getAverageRating(employeeId);
 
     const container = document.getElementById("employee-reviews");
     container.innerHTML = `
@@ -426,10 +427,5 @@ export class PerformanceModule {
     setTimeout(() => {
       msgDiv.innerHTML = "";
     }, 5000);
-  }
-
-  // Hàm delay
-  delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

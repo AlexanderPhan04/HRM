@@ -1,17 +1,17 @@
-// app.js - File chính của ứng dụng HRM
-// Import tất cả các module
-import { AuthModule } from "./authModule.js";
-import { EmployeeDbModule } from "./employeeDbModule.js";
-import { AddEmployeeModule } from "./addEmployeeModule.js";
-import { EditEmployeeModule } from "./editEmployeeModule.js";
-import { DeleteEmployeeModule } from "./deleteEmployeeModule.js";
-import { SearchEmployeeModule } from "./searchEmployeeModule.js";
-import { DepartmentModule } from "./departmentModule.js";
-import { PositionModule } from "./positionModule.js";
-import { SalaryModule } from "./salaryModule.js";
-import { AttendanceModule } from "./attendanceModule.js";
-import { LeaveModule } from "./leaveModule.js";
-import { PerformanceModule } from "./performanceModule.js";
+// app.js - File chính của ứng dụng HRM (MVC Structure)
+// Import tất cả các module từ folder modules
+import { AuthModule } from "./modules/authModule.js";
+import { EmployeeDbModule } from "./modules/employeeDbModule.js";
+import { AddEmployeeModule } from "./modules/addEmployeeModule.js";
+import { EditEmployeeModule } from "./modules/editEmployeeModule.js";
+import { DeleteEmployeeModule } from "./modules/deleteEmployeeModule.js";
+import { SearchEmployeeModule } from "./modules/searchEmployeeModule.js";
+import { DepartmentModule } from "./modules/departmentModule.js";
+import { PositionModule } from "./modules/positionModule.js";
+import { SalaryModule } from "./modules/salaryModule.js";
+import { AttendanceModule } from "./modules/attendanceModule.js";
+import { LeaveModule } from "./modules/leaveModule.js";
+import { PerformanceModule } from "./modules/performanceModule.js";
 
 class HRMApp {
   constructor() {
@@ -73,7 +73,7 @@ class HRMApp {
 
     // Arrow function để giữ context của 'this'
     // Khi login thành công, gọi method showDashboard()
-    this.authModule.onLoginSuccess = () => this.showDashboard();
+    this.authModule.onLoginSuccess = async () => await this.showDashboard();
     // Khi logout, gọi method showAuthScreen()
     this.authModule.onLogout = () => this.showAuthScreen();
 
@@ -102,11 +102,11 @@ class HRMApp {
   }
 
   // Khởi tạo ứng dụng (check authentication và show tương ứng)
-  init() {
+  async init() {
     // Kiểm tra user đã đăng nhập chưa
     if (this.authModule.isAuthenticated()) {
       // Nếu đã đăng nhập: hiển thị dashboard
-      this.showDashboard();
+      await this.showDashboard();
     } else {
       // Nếu chưa đăng nhập: hiển thị màn hình login
       this.showAuthScreen();
@@ -124,7 +124,7 @@ class HRMApp {
   }
 
   // Hiển thị dashboard (sau khi đăng nhập thành công)
-  showDashboard() {
+  async showDashboard() {
     // Ẩn auth screen
     document.getElementById("auth-screen").classList.add("hidden");
     // Hiển thị dashboard screen
@@ -155,7 +155,7 @@ class HRMApp {
 
     // ============ Load module mặc định ============
     // Load danh sách nhân viên khi vào dashboard
-    this.loadModule("employee-list");
+    await this.loadModule("employee-list");
   }
 
   // Gắn event listeners cho menu (sử dụng querySelectorAll và forEach)
@@ -166,13 +166,13 @@ class HRMApp {
     // Loop qua từng menu item (forEach - higher-order function)
     menuItems.forEach((item) => {
       // Gắn click event cho mỗi menu item
-      item.addEventListener("click", (e) => {
+      item.addEventListener("click", async (e) => {
         e.preventDefault(); // Ngăn link navigate
 
         // Lấy tên module từ attribute data-module
         const moduleName = e.target.getAttribute("data-module");
         // Load module tương ứng
-        this.loadModule(moduleName);
+        await this.loadModule(moduleName);
 
         // ============ Highlight active menu ============
         // Remove class "active" từ tất cả menu items
@@ -245,62 +245,66 @@ class HRMApp {
     sidebar.classList.remove("active");
     overlay.classList.remove("active");
   } // Load module theo tên
-  loadModule(moduleName) {
+  async loadModule(moduleName) {
     const contentArea = document.getElementById("content-area");
     this.currentModule = moduleName;
 
     switch (moduleName) {
       case "employee-list":
-        this.renderEmployeeList();
+        await this.renderEmployeeList();
         break;
 
       case "add-employee":
-        contentArea.innerHTML = this.addEmployeeModule.render();
+        contentArea.innerHTML = await this.addEmployeeModule.render();
         this.addEmployeeModule.attachEventListeners();
         break;
 
       case "edit-employee":
-        contentArea.innerHTML = this.editEmployeeModule.render();
+        contentArea.innerHTML = await this.editEmployeeModule.render();
         this.editEmployeeModule.attachEventListeners();
         break;
 
       case "delete-employee":
-        contentArea.innerHTML = this.deleteEmployeeModule.render();
+        contentArea.innerHTML = await this.deleteEmployeeModule.render();
         this.deleteEmployeeModule.attachEventListeners();
         break;
 
       case "search-employee":
-        contentArea.innerHTML = this.searchEmployeeModule.render();
+        contentArea.innerHTML = await this.searchEmployeeModule.render();
         this.searchEmployeeModule.attachEventListeners();
         break;
 
       case "departments":
-        contentArea.innerHTML = this.departmentModule.render(this.employeeDb);
+        contentArea.innerHTML = await this.departmentModule.render(
+          this.employeeDb
+        );
         this.departmentModule.attachEventListeners(this.employeeDb);
         break;
 
       case "positions":
-        contentArea.innerHTML = this.positionModule.render(this.employeeDb);
+        contentArea.innerHTML = await this.positionModule.render(
+          this.employeeDb
+        );
         this.positionModule.attachEventListeners(this.employeeDb);
         break;
 
       case "salary":
-        contentArea.innerHTML = this.salaryModule.render();
+        contentArea.innerHTML = await this.salaryModule.render();
         this.salaryModule.attachEventListeners();
         break;
 
       case "attendance":
-        contentArea.innerHTML = this.attendanceModule.render();
+        contentArea.innerHTML = await this.attendanceModule.render();
         this.attendanceModule.attachEventListeners();
         break;
 
       case "leave":
-        contentArea.innerHTML = this.leaveModule.render();
+        contentArea.innerHTML = await this.leaveModule.render();
         this.leaveModule.attachEventListeners();
         break;
 
       case "performance":
-        contentArea.innerHTML = this.performanceModule.render();
+        contentArea.innerHTML = await this.performanceModule.render();
         this.performanceModule.attachEventListeners();
         break;
 
@@ -310,17 +314,17 @@ class HRMApp {
   }
 
   // Render danh sách nhân viên
-  renderEmployeeList() {
-    const employees = this.employeeDb.getAllEmployees();
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+  async renderEmployeeList() {
+    const employees = await this.employeeDb.getAllEmployees();
+    const departments = await this.departmentModule.getAllDepartments();
+    const positions = await this.positionModule.getAllPositions();
 
     // Tính thống kê
     const stats = {
       totalEmployees: employees.length,
       totalDepartments: departments.length,
       totalPositions: positions.length,
-      totalSalary: this.employeeDb.getTotalSalary(),
+      totalSalary: await this.employeeDb.getTotalSalary(),
     };
 
     const content = `

@@ -7,9 +7,26 @@ export class AddEmployeeModule {
   }
 
   // Render giao diện thêm nhân viên
-  render() {
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+  async render() {
+    // Fetch departments và positions trực tiếp
+    let departments = [];
+    let positions = [];
+
+    try {
+      const deptResponse = await fetch("api.php/departments");
+      const deptData = await deptResponse.json();
+      departments = Array.isArray(deptData.data) ? deptData.data : [];
+
+      const posResponse = await fetch("api.php/positions");
+      const posData = await posResponse.json();
+      positions = Array.isArray(posData.data) ? posData.data : [];
+    } catch (error) {
+      console.error("Error loading data:", error);
+      departments = [];
+      positions = [];
+    }
+
+    const newEmployeeId = await this.employeeDb.generateEmployeeId();
 
     return `
             <div class="module-header">
@@ -22,7 +39,7 @@ export class AddEmployeeModule {
                     <div class="form-row">
                         <div class="form-group">
                             <label>Mã nhân viên</label>
-                            <input type="text" id="emp-id" value="${this.employeeDb.generateEmployeeId()}" readonly>
+                            <input type="text" id="emp-id" value="${newEmployeeId}" readonly>
                         </div>
                         <div class="form-group">
                             <label>Họ tên *</label>
@@ -167,8 +184,8 @@ export class AddEmployeeModule {
       // Reset form về trạng thái ban đầu
       document.getElementById("add-employee-form").reset();
       // Generate ID mới cho lần thêm tiếp theo
-      document.getElementById("emp-id").value =
-        this.employeeDb.generateEmployeeId();
+      const nextId = await this.employeeDb.generateEmployeeId();
+      document.getElementById("emp-id").value = nextId;
     } catch (error) {
       // Bắt lỗi nếu có exception xảy ra
       this.showMessage("Có lỗi xảy ra: " + error.message, "error");
