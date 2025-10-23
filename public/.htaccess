@@ -1,45 +1,40 @@
-# .htaccess - Apache configuration cho MVC Structure
+# .htaccess - URL Rewriting cho HRM System
+# Đặt file này trong folder public/
 
-# Enable Rewrite Engine
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /HRM/public/
-    
-    # Cho phép truy cập trực tiếp các file PHP (api.php, index.php, etc)
-    RewriteCond %{REQUEST_FILENAME} -f
-    RewriteRule ^ - [L]
-    
-    # Cho phép truy cập các file tĩnh và folders
-    RewriteCond %{REQUEST_FILENAME} -d
-    RewriteRule ^ - [L]
-    
-    # API routing - không redirect api.php
-    # Tất cả requests đến api.php sẽ được xử lý bởi api.php
-</IfModule>
+RewriteEngine On
 
-# Enable PATH_INFO for API routing
-AcceptPathInfo On
+# Redirect API calls để ẩn api.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ api.php/$1 [QSA,L]
 
-# CORS Headers
+# Redirect root to index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$ index.html [L]
 
+# Security headers
 <IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Security Headers
+# Hide sensitive files
+<Files "*.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
 
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
-</IfModule>
+# Allow only api.php
+<Files "api.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
 
-# Disable directory listing
-Options -Indexes
-
-# Protect sensitive files
-<FilesMatch "\.(sql|md|log|ini|bat|ps1)$">
-    Require all denied
-</FilesMatch>
+# Allow index.html
+<Files "index.html">
+    Order Allow,Deny
+    Allow from all
+</Files>

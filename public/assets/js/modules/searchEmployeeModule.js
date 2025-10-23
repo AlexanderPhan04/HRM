@@ -282,8 +282,8 @@ export class SearchEmployeeModule {
                             </th>
                             <th>Email</th>
                             <th>Số điện thoại</th>
-                            <th style="cursor: pointer;" onclick="window.searchEmployeeModule.sortAndDisplay('hireDate')">
-                                Ngày vào làm${getSortIcon("hireDate")}
+                            <th style="cursor: pointer;" onclick="window.searchEmployeeModule.sortAndDisplay('hire_date')">
+                                Ngày vào làm${getSortIcon("hire_date")}
                             </th>
                         </tr>
                     </thead>
@@ -305,7 +305,7 @@ export class SearchEmployeeModule {
                                     <td>${this.formatCurrency(emp.salary)}</td>
                                     <td>${emp.email}</td>
                                     <td>${emp.phone}</td>
-                                    <td>${this.formatDate(emp.hireDate)}</td>
+                                    <td>${this.formatDate(emp.hire_date)}</td>
                                 </tr>
                             `;
                           })

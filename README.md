@@ -1,8 +1,13 @@
-# Ứng Dụng Quản Lý Nhân Sự (HRM)
+# Hệ Thống Quản Lý Nhân Sự (HRM) - MVC Architecture
 
 ## Giới Thiệu
 
-Đây là ứng dụng quản lý nhân sự hoàn chỉnh được xây dựng bằng **JavaScript thuần** (Vanilla JavaScript), không sử dụng bất kỳ framework hay thư viện bên ngoài nào.
+Đây là hệ thống quản lý nhân sự hoàn chỉnh được xây dựng theo kiến trúc **MVC (Model-View-Controller)** với:
+
+- **Frontend**: Vanilla JavaScript ES6+ (không framework)
+- **Backend**: PHP 8.4+ với MySQL
+- **API**: RESTful JSON endpoints
+- **Database**: MySQL với PDO
 
 ## Công Nghệ Sử Dụng
 
@@ -23,37 +28,62 @@
 
 ### Backend
 
-- **PHP 8.4+**: Server-side logic
-- **MySQL**: Database management
-- **PDO**: Database abstraction layer
-- **MVC Architecture**: Controllers, Models, Views
-- **RESTful API**: JSON endpoints
+- **PHP 8.4+**: Server-side logic với SPL Autoload
+- **MySQL 8.0+**: Database management với UTF8MB4
+- **PDO**: Database abstraction layer với prepared statements
+- **MVC Architecture**: Controllers, Models, Config
+- **RESTful API**: JSON endpoints với CORS support
+- **Session Management**: PHP sessions cho authentication
 
 ## Cấu Trúc Dự Án
 
 ```
 HRM/
-├── public/                    # Frontend (Web Root)
-│   ├── index.html            # File HTML chính
-│   ├── api.php               # API Router
-│   ├── assets/
-│   │   ├── css/style.css     # CSS cho giao diện
-│   │   └── js/
-│   │       ├── app.js        # File JavaScript chính
-│   │       └── modules/      # JavaScript Modules
-│   │           ├── authModule.js
-│   │           ├── employeeDbModule.js
-│   │           ├── addEmployeeModule.js
-│   │           ├── departmentModule.js
-│   │           ├── positionModule.js
-│   │           └── ...
+├── public/                    # Web Root (Frontend + API)
+│   ├── index.html            # Single Page Application
+│   ├── api.php               # RESTful API Router
+│   ├── .htaccess             # URL Rewriting & Security
+│   └── assets/
+│       ├── css/style.css     # Responsive CSS
+│       └── js/
+│           ├── app.js        # Main Application (MVC Router)
+│           └── modules/      # JavaScript Modules (12 modules)
+│               ├── authModule.js           # Authentication
+│               ├── employeeDbModule.js     # Employee CRUD
+│               ├── addEmployeeModule.js    # Add Employee
+│               ├── editEmployeeModule.js   # Edit Employee
+│               ├── deleteEmployeeModule.js # Delete Employee
+│               ├── searchEmployeeModule.js # Search & Filter
+│               ├── departmentModule.js     # Department Management
+│               ├── positionModule.js       # Position Management
+│               ├── salaryModule.js         # Salary Management
+│               ├── attendanceModule.js     # Time Tracking
+│               ├── leaveModule.js          # Leave Management
+│               └── performanceModule.js    # Performance Reviews
 ├── app/                      # Backend (MVC)
-│   ├── Controllers/          # PHP Controllers
-│   ├── Models/              # PHP Models
-│   ├── Config/              # Configuration
-│   └── Views/               # PHP Views
-├── database/                # Database
-│   └── migrations/          # SQL Scripts
+│   ├── Controllers/          # API Controllers (7 controllers)
+│   │   ├── BaseController.php
+│   │   ├── AuthController.php
+│   │   ├── EmployeeController.php
+│   │   ├── DepartmentController.php
+│   │   ├── PositionController.php
+│   │   ├── AttendanceController.php
+│   │   ├── LeaveController.php
+│   │   └── PerformanceController.php
+│   ├── Models/              # Database Models (8 models)
+│   │   ├── BaseModel.php
+│   │   ├── UserModel.php
+│   │   ├── EmployeeModel.php
+│   │   ├── DepartmentModel.php
+│   │   ├── PositionModel.php
+│   │   ├── AttendanceModel.php
+│   │   ├── LeaveModel.php
+│   │   └── PerformanceModel.php
+│   └── Config/              # Configuration
+│       └── Database.php      # Database Connection
+├── database/                # Database Schema & Data
+│   └── migrations/
+│       └── 001_initial_schema.sql  # Complete DB Schema + Sample Data
 └── README.md               # Documentation
 ```
 
@@ -61,113 +91,135 @@ HRM/
 
 ### 1. Module Xác Thực (AuthModule)
 
-- Đăng ký và đăng nhập người dùng
-- Quản lý phiên làm việc
-- Mã hóa mật khẩu đơn giản sử dụng closure
-- Tài khoản mặc định: `admin` / `admin123`
+- **Đăng nhập/Đăng xuất** với PHP sessions
+- **Mã hóa mật khẩu** bằng `password_hash()` (PHP)
+- **Quản lý phiên** với session storage
+- **Tài khoản mặc định**: `admin` / `admin123`
+- **Bảo mật**: CORS headers, input validation
 
 ### 2. Module Cơ Sở Dữ Liệu Nhân Viên (EmployeeDbModule)
 
-- Kết nối với MySQL database qua PHP API
-- CRUD operations (Create, Read, Update, Delete)
-- Higher-order functions để filter và sort
-- Dữ liệu được lưu trữ trong MySQL database
+- **API Integration**: Kết nối với PHP RESTful API
+- **CRUD Operations**: Create, Read, Update, Delete
+- **Data Validation**: Client-side và server-side validation
+- **Error Handling**: Xử lý lỗi API và network
+- **Cache Busting**: Version control cho JavaScript modules
 
 ### 3. Module Thêm Nhân Viên (AddEmployeeModule)
 
-- Form thêm nhân viên động
-- Validate dữ liệu đầu vào real-time
-- Tự động generate mã nhân viên
+- **Dynamic Form**: Form thêm nhân viên với validation
+- **Auto ID Generation**: Tự động tạo mã nhân viên (EMP001, EMP002...)
+- **Real-time Validation**: Kiểm tra dữ liệu ngay khi nhập
+- **Department/Position Integration**: Load danh sách từ API
 
 ### 4. Module Sửa Nhân Viên (EditEmployeeModule)
 
-- Tìm kiếm nhân viên theo mã hoặc tên
-- Preload dữ liệu hiện có
-- Xác nhận trước khi lưu
-- Sử dụng closure để lưu trạng thái
+- **Search & Load**: Tìm kiếm và load dữ liệu nhân viên
+- **Form Pre-population**: Điền sẵn thông tin hiện có
+- **Update Confirmation**: Xác nhận trước khi cập nhật
+- **Field Validation**: Validate từng field riêng biệt
 
 ### 5. Module Xóa Nhân Viên (DeleteEmployeeModule)
 
-- Tìm kiếm và xác nhận trước khi xóa
-- Cập nhật giao diện real-time
+- **Search Interface**: Tìm kiếm nhân viên cần xóa
+- **Confirmation Dialog**: Xác nhận trước khi xóa
+- **Real-time Update**: Cập nhật danh sách ngay lập tức
+- **Error Handling**: Xử lý lỗi khi xóa
 
 ### 6. Module Tìm Kiếm Nhân Viên (SearchEmployeeModule)
 
-- Tìm kiếm nâng cao với nhiều tiêu chí
-- Hỗ trợ Regular Expression
-- Sắp xếp kết quả (click vào header)
-- Lọc theo khoảng lương
+- **Advanced Search**: Tìm kiếm theo nhiều tiêu chí
+- **Filter Options**: Lọc theo phòng ban, vị trí, lương
+- **Sortable Results**: Sắp xếp theo cột (click header)
+- **Real-time Search**: Tìm kiếm ngay khi nhập
 
 ### 7. Module Quản Lý Phòng Ban (DepartmentModule)
 
-- Thêm, sửa, xóa phòng ban
-- Gán trưởng phòng
-- Kiểm tra ràng buộc trước khi xóa
+- **CRUD Operations**: Thêm, sửa, xóa phòng ban
+- **Manager Assignment**: Gán trưởng phòng cho phòng ban
+- **Constraint Checking**: Kiểm tra ràng buộc trước khi xóa
+- **API Integration**: Kết nối với Department API
 
 ### 8. Module Quản Lý Vị Trí (PositionModule)
 
-- Quản lý các vị trí công việc
-- Lương cơ bản theo vị trí
-- Kiểm tra ràng buộc với nhân viên
+- **Position Management**: Quản lý các vị trí công việc
+- **Salary Base**: Thiết lập lương cơ bản theo vị trí
+- **Constraint Validation**: Kiểm tra ràng buộc với nhân viên
+- **Dynamic Updates**: Cập nhật real-time
 
 ### 9. Module Quản Lý Lương (SalaryModule)
 
-- Tính lương thực nhận (lương + thưởng - khấu trừ)
-- Sử dụng map/reduce cho tính toán
-- Bảng lương tổng hợp
-- Cập nhật lương, thưởng, khấu trừ
+- **Net Salary Calculation**: Tính lương thực nhận (lương + thưởng - khấu trừ)
+- **Payroll Report**: Báo cáo lương tổng hợp
+- **Salary Updates**: Cập nhật lương, thưởng, khấu trừ
+- **Data Validation**: Validate số liệu lương
 
 ### 10. Module Chấm Công (AttendanceModule)
 
-- Check-in/Check-out hàng ngày
-- Tính tổng giờ làm việc
-- Báo cáo chấm công theo thời gian
-- Sử dụng Date objects
+- **Time Tracking**: Check-in/Check-out hàng ngày
+- **Hours Calculation**: Tính tổng giờ làm việc
+- **Attendance Reports**: Báo cáo chấm công theo thời gian
+- **Status Management**: Quản lý trạng thái (present, absent, late)
 
 ### 11. Module Nghỉ Phép (LeaveModule)
 
-- Yêu cầu nghỉ phép (phép năm, ốm đau, cá nhân)
-- Phê duyệt/từ chối yêu cầu
-- Theo dõi số ngày phép còn lại (mặc định 20 ngày/năm)
-- Lịch sử nghỉ phép
+- **Leave Requests**: Yêu cầu nghỉ phép (phép năm, ốm đau, cá nhân)
+- **Approval System**: Phê duyệt/từ chối yêu cầu
+- **Leave Balance**: Theo dõi số ngày phép còn lại (20 ngày/năm)
+- **Leave History**: Lịch sử nghỉ phép chi tiết
 
 ### 12. Module Đánh Giá Hiệu Suất (PerformanceModule)
 
-- Thêm đánh giá cho nhân viên (1-5 sao)
-- Tính điểm trung bình sử dụng reduce
-- Top performers (sắp xếp theo điểm)
-- Lịch sử đánh giá chi tiết
+- **Performance Reviews**: Thêm đánh giá cho nhân viên (1-5 sao)
+- **Average Rating**: Tính điểm trung bình sử dụng reduce
+- **Top Performers**: Hiển thị nhân viên xuất sắc nhất
+- **Review History**: Lịch sử đánh giá chi tiết
 
-## Cách Chạy Ứng Dụng
+## Cài Đặt & Chạy Ứng Dụng
 
-### Yêu Cầu
+### Yêu Cầu Hệ Thống
 
-- Trình duyệt web hiện đại (Chrome, Firefox, Edge, Safari)
-- Local server (vì sử dụng ES6 modules)
+- **PHP 8.4+** với PDO extension
+- **MySQL 8.0+**
+- **Web Server** (Apache/Nginx) hoặc **Laragon/XAMPP**
+- **Trình duyệt hiện đại** (Chrome, Firefox, Edge, Safari)
 
-### Cách 1: Sử dụng VS Code Live Server
+### Hướng Dẫn Cài Đặt
 
-1. Cài đặt extension "Live Server" trong VS Code
-2. Mở thư mục dự án trong VS Code
-3. Click phải vào file `index.html`
-4. Chọn "Open with Live Server"
-5. Ứng dụng sẽ mở tại `http://localhost:5500` (hoặc port khác)
+#### Bước 1: Cài đặt Database
 
-### Cách 2: Sử dụng Python
+```sql
+-- Tạo database
+CREATE DATABASE hrm_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-```bash
-# Python 3
-python -m http.server 8000
-
-# Sau đó mở trình duyệt: http://localhost:8000
+-- Import schema và dữ liệu mẫu
+mysql -u root -p hrm_system < database/migrations/001_initial_schema.sql
 ```
 
-### Cách 3: Sử dụng Node.js
+#### Bước 2: Cấu hình Database
 
-```bash
-npx http-server -p 8000
-# Mở trình duyệt: http://localhost:8000
+Chỉnh sửa `app/Config/Database.php`:
+
+```php
+private $host = "localhost";
+private $db_name = "hrm_system";
+private $username = "root";
+private $password = "your_password";
 ```
+
+#### Bước 3: Chạy Ứng Dụng
+
+**Với Laragon/XAMPP:**
+
+1. Copy thư mục `HRM` vào `htdocs` (XAMPP) hoặc `www` (Laragon)
+2. Truy cập: `http://localhost/HRM/public/`
+3. Đăng nhập: `admin` / `admin123`
+
+**Với Apache/Nginx:**
+
+1. Cấu hình Virtual Host trỏ đến thư mục `public/`
+2. Đảm bảo mod_rewrite được bật
+3. Truy cập domain đã cấu hình
 
 ## Hướng Dẫn Sử Dụng
 
@@ -257,48 +309,72 @@ npx http-server -p 8000
 - Event listeners
 - Form validation
 
-## Lưu Trữ Dữ Liệu
+## Kiến Trúc & Lưu Trữ Dữ Liệu
 
-Tất cả dữ liệu được lưu trong **MySQL Database** với các bảng:
+### Database Schema (MySQL)
 
-- `users`: Danh sách người dùng
-- `employees`: Danh sách nhân viên
-- `departments`: Danh sách phòng ban
-- `positions`: Danh sách vị trí
-- `attendance`: Dữ liệu chấm công
-- `leaves`: Dữ liệu nghỉ phép
-- `performance_reviews`: Dữ liệu đánh giá
+**7 bảng chính với đầy đủ relationships:**
 
-**Session Storage** chỉ được sử dụng cho:
+- **`users`**: Quản lý người dùng (admin, hr_manager, employee)
+- **`employees`**: Thông tin nhân viên (13 fields)
+- **`departments`**: Phòng ban với trưởng phòng
+- **`positions`**: Vị trí công việc với lương cơ bản
+- **`attendance`**: Chấm công hàng ngày
+- **`leaves`**: Quản lý nghỉ phép
+- **`performance_reviews`**: Đánh giá hiệu suất
 
-- `hrm_session`: Phiên đăng nhập hiện tại
+### API Architecture
+
+**RESTful API với 7 controllers:**
+
+- `AuthController`: Authentication & sessions
+- `EmployeeController`: CRUD nhân viên
+- `DepartmentController`: Quản lý phòng ban
+- `PositionController`: Quản lý vị trí
+- `AttendanceController`: Chấm công
+- `LeaveController`: Nghỉ phép
+- `PerformanceController`: Đánh giá
+
+### Frontend Architecture
+
+**12 JavaScript modules với ES6+ features:**
+
+- Module system với import/export
+- SPL Autoload cho PHP classes
+- Cache busting cho JavaScript
+- Responsive CSS với mobile support
 
 ## Thách Thức & Giải Pháp
 
-### 1. Module System
+### 1. Frontend-Backend Integration
 
-**Thách thức**: ES6 modules yêu cầu server
-**Giải pháp**: Sử dụng Live Server hoặc local HTTP server
+**Thách thức**: Kết nối JavaScript với PHP API
+**Giải pháp**: RESTful API với JSON responses, CORS headers
 
-### 2. Quản Lý State
+### 2. Field Naming Convention
 
-**Thách thức**: Không có state management library
-**Giải pháp**: Sử dụng localStorage và closure để lưu trạng thái
+**Thách thức**: Frontend dùng camelCase, Backend dùng snake_case
+**Giải pháp**: Chuẩn hóa snake_case cho API, convert trong frontend
 
-### 3. Validation
+### 3. Data Validation
 
-**Thách thức**: Validate dữ liệu phức tạp
-**Giải pháp**: Tạo hàm validate riêng với RegExp
+**Thách thức**: Validate dữ liệu ở cả client và server
+**Giải pháp**: Client-side validation + Server-side validation với PDO
 
-### 4. UI Updates
+### 4. Error Handling
 
-**Thách thức**: Cập nhật UI sau CRUD operations
-**Giải pháp**: Re-render module hoặc cập nhật DOM trực tiếp
+**Thách thức**: Xử lý lỗi API và network
+**Giải pháp**: Try-catch blocks, error responses, user feedback
 
-### 5. Relationships
+### 5. Cache Management
 
-**Thách thức**: Quản lý quan hệ giữa entities (employee-department-position)
-**Giải pháp**: Sử dụng ID references và kiểm tra ràng buộc
+**Thách thức**: Browser cache JavaScript files cũ
+**Giải pháp**: Cache busting với version parameters (?v=timestamp)
+
+### 6. Database Relationships
+
+**Thách thức**: Quản lý foreign keys và constraints
+**Giải pháp**: Proper database design với foreign key constraints
 
 ## Testing
 
@@ -325,32 +401,95 @@ Tất cả dữ liệu được lưu trong **MySQL Database** với các bảng:
 - Ngày không hợp lệ
 - Số âm
 
-## Cài Đặt
+## API Endpoints
 
-### Yêu Cầu Hệ Thống
+### Authentication
 
-- **PHP 8.4+** với PDO extension
-- **MySQL 8.0+**
-- **Web Server** (Apache/Nginx) hoặc **Laragon/XAMPP**
+- `POST /api/auth/login` - Đăng nhập
+- `POST /api/auth/logout` - Đăng xuất
+- `GET /api/auth/check` - Kiểm tra session
 
-### Hướng Dẫn Cài Đặt
+### Employees
 
-1. **Clone repository**
-2. **Cấu hình database**:
-   - Tạo database MySQL tên `hrm_db`
-   - Import file `database/migrations/001_initial_schema.sql`
-3. **Cấu hình kết nối database** trong `app/Config/Database.php`
-4. **Truy cập** `http://localhost/HRM/public/`
-5. **Đăng nhập** với tài khoản mặc định: `admin` / `admin123`
+- `GET /api/employees` - Danh sách nhân viên
+- `GET /api/employees/:id` - Chi tiết nhân viên
+- `POST /api/employees` - Tạo nhân viên mới
+- `PUT /api/employees/:id` - Cập nhật nhân viên
+- `DELETE /api/employees/:id` - Xóa nhân viên
+- `POST /api/employees/search` - Tìm kiếm nhân viên
+
+### Departments
+
+- `GET /api/departments` - Danh sách phòng ban
+- `POST /api/departments` - Tạo phòng ban mới
+- `PUT /api/departments/:id` - Cập nhật phòng ban
+- `DELETE /api/departments/:id` - Xóa phòng ban
+
+### Positions
+
+- `GET /api/positions` - Danh sách vị trí
+- `POST /api/positions` - Tạo vị trí mới
+- `PUT /api/positions/:id` - Cập nhật vị trí
+- `DELETE /api/positions/:id` - Xóa vị trí
+
+### Leaves
+
+- `GET /api/leaves` - Danh sách nghỉ phép
+- `GET /api/leaves/balance` - Số ngày phép còn lại
+- `POST /api/leaves` - Tạo yêu cầu nghỉ phép
+- `PUT /api/leaves/:id/status` - Phê duyệt/từ chối
+
+### Attendance
+
+- `GET /api/attendance` - Danh sách chấm công
+- `POST /api/attendance/check-in` - Check-in
+- `POST /api/attendance/check-out` - Check-out
+
+### Performance
+
+- `GET /api/performance` - Danh sách đánh giá
+- `POST /api/performance` - Tạo đánh giá mới
+- `GET /api/performance/top` - Top performers
+
+## Tính Năng Nổi Bật
+
+### 🚀 **Kiến Trúc Hiện Đại**
+
+- **MVC Pattern**: Tách biệt rõ ràng Model-View-Controller
+- **RESTful API**: API chuẩn REST với JSON responses
+- **SPL Autoload**: Tự động load PHP classes
+- **ES6+ Modules**: JavaScript modules với import/export
+
+### 🔒 **Bảo Mật**
+
+- **Password Hashing**: Sử dụng `password_hash()` của PHP
+- **SQL Injection Protection**: PDO prepared statements
+- **CORS Headers**: Bảo mật cross-origin requests
+- **Input Validation**: Validate ở cả client và server
+
+### 📱 **Responsive Design**
+
+- **Mobile-First**: Giao diện tối ưu cho mobile
+- **Modern CSS**: Flexbox, Grid, CSS Variables
+- **Progressive Enhancement**: Hoạt động tốt trên mọi thiết bị
+
+### ⚡ **Performance**
+
+- **Cache Busting**: Quản lý cache JavaScript
+- **Lazy Loading**: Chỉ load module khi cần
+- **Optimized Queries**: Database queries được tối ưu
+- **Minimal Dependencies**: Không sử dụng framework nặng
 
 ## Tác Giả
 
-Dự án được phát triển như một assignment học tập về JavaScript nâng cao.
+Dự án được phát triển như một assignment học tập về **Full-Stack Development** với **Vanilla JavaScript** và **PHP MVC**.
 
 ## License
 
-Dự án này được tạo ra cho mục đích học tập.
+Dự án này được tạo ra cho mục đích học tập và tham khảo.
 
 ---
 
-**Lưu ý**: Ứng dụng này sử dụng MySQL database nên dữ liệu được lưu trữ bền vững trên server. Để triển khai thực tế cần cấu hình database và web server.
+**🎯 Mục tiêu**: Chứng minh khả năng xây dựng ứng dụng web hoàn chỉnh chỉ với **Vanilla JavaScript** và **PHP thuần**, không cần framework phức tạp.
+
+**📊 Thống kê**: 12 JavaScript modules, 7 PHP controllers, 8 database models, 7 database tables, 20+ API endpoints.

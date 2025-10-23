@@ -8,15 +8,18 @@ export class SalaryModule {
 
   // Tính lương thực nhận (Net Salary = Base + Bonus - Deduction)
   calculateNetSalary(employee) {
-    // Lấy lương cơ bản, nếu undefined thì mặc định là 0
-    const baseSalary = employee.salary || 0;
-    // Lấy tiền thưởng, nếu undefined thì mặc định là 0
-    const bonus = employee.bonus || 0;
-    // Lấy tiền khấu trừ (bảo hiểm, thuế...), nếu undefined thì mặc định là 0
-    const deduction = employee.deduction || 0;
+    // Lấy lương cơ bản, đảm bảo là số
+    const baseSalary = parseFloat(employee.salary) || 0;
+    // Lấy tiền thưởng, đảm bảo là số
+    const bonus = parseFloat(employee.bonus) || 0;
+    // Lấy tiền khấu trừ (bảo hiểm, thuế...), đảm bảo là số
+    const deduction = parseFloat(employee.deduction) || 0;
 
     // Công thức: Lương thực nhận = Lương cơ bản + Thưởng - Khấu trừ
-    return baseSalary + bonus - deduction;
+    const netSalary = baseSalary + bonus - deduction;
+
+    // Đảm bảo kết quả là số hợp lệ
+    return isNaN(netSalary) ? 0 : netSalary;
   }
 
   // Tạo báo cáo lương (sử dụng map - higher-order function)

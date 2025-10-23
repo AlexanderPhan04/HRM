@@ -1,17 +1,17 @@
 // app.js - File chính của ứng dụng HRM (MVC Structure)
 // Import tất cả các module từ folder modules
 import { AuthModule } from "./modules/authModule.js";
-import { EmployeeDbModule } from "./modules/employeeDbModule.js?v=202510231600";
-import { AddEmployeeModule } from "./modules/addEmployeeModule.js?v=202510231600";
-import { EditEmployeeModule } from "./modules/editEmployeeModule.js?v=202510231600";
-import { DeleteEmployeeModule } from "./modules/deleteEmployeeModule.js?v=202510231600";
-import { SearchEmployeeModule } from "./modules/searchEmployeeModule.js?v=202510231600";
-import { DepartmentModule } from "./modules/departmentModule.js?v=202510231600";
-import { PositionModule } from "./modules/positionModule.js?v=202510231600";
-import { SalaryModule } from "./modules/salaryModule.js?v=202510231600";
-import { AttendanceModule } from "./modules/attendanceModule.js?v=202510231600";
-import { LeaveModule } from "./modules/leaveModule.js?v=202510231600";
-import { PerformanceModule } from "./modules/performanceModule.js?v=202510231600";
+import { EmployeeDbModule } from "./modules/employeeDbModule.js?v=202510231900";
+import { AddEmployeeModule } from "./modules/addEmployeeModule.js?v=202510231900";
+import { EditEmployeeModule } from "./modules/editEmployeeModule.js?v=202510231900";
+import { DeleteEmployeeModule } from "./modules/deleteEmployeeModule.js?v=202510231900";
+import { SearchEmployeeModule } from "./modules/searchEmployeeModule.js?v=202510231900";
+import { DepartmentModule } from "./modules/departmentModule.js?v=202510231900";
+import { PositionModule } from "./modules/positionModule.js?v=202510231900";
+import { SalaryModule } from "./modules/salaryModule.js?v=202510232400";
+import { AttendanceModule } from "./modules/attendanceModule.js?v=202510231900";
+import { LeaveModule } from "./modules/leaveModule.js?v=202510232300";
+import { PerformanceModule } from "./modules/performanceModule.js?v=202510231900";
 
 class HRMApp {
   constructor() {
@@ -382,10 +382,10 @@ class HRMApp {
                             ${employees
                               .map((emp) => {
                                 const dept = departments.find(
-                                  (d) => d.id === emp.departmentId
+                                  (d) => d.id === emp.department_id
                                 );
                                 const pos = positions.find(
-                                  (p) => p.id === emp.positionId
+                                  (p) => p.id === emp.position_id
                                 );
                                 return `
                                     <tr>
@@ -399,7 +399,7 @@ class HRMApp {
                                           emp.salary
                                         )}</td>
                                         <td>${this.formatDate(
-                                          emp.hireDate
+                                          emp.hire_date
                                         )}</td>
                                     </tr>
                                 `;

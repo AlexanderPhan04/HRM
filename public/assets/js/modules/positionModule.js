@@ -36,7 +36,7 @@ export class PositionModule {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title, description, salaryBase }),
+        body: JSON.stringify({ title, description, salary_base: salaryBase }),
       });
       const data = await response.json();
       if (!data.success) {
@@ -274,7 +274,7 @@ export class PositionModule {
         e.preventDefault();
         const updates = {
           title: document.getElementById("edit-pos-title").value.trim(),
-          salaryBase: parseFloat(
+          salary_base: parseFloat(
             document.getElementById("edit-pos-salary").value
           ),
           description: document

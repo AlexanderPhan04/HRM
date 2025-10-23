@@ -101,11 +101,34 @@ export class LeaveModule {
     const leaves = await this.getAllLeaves();
     const pendingLeaves = leaves.filter((l) => l.status === "pending");
 
+    // Load employee names for pending leaves
+    const pendingLeavesWithNames = await Promise.all(
+      pendingLeaves.map(async (leave) => {
+        try {
+          const emp = await this.employeeDb.getEmployeeById(leave.employee_id);
+          return {
+            ...leave,
+            employeeName: emp ? emp.name : "Unknown Employee",
+          };
+        } catch (error) {
+          return { ...leave, employeeName: "Unknown Employee" };
+        }
+      })
+    );
+
     // Lấy balance cho tất cả employees
     const employeesWithBalance = await Promise.all(
       employees.map(async (emp) => {
-        const balance = await this.getLeaveBalance(emp.id);
-        return { ...emp, balance };
+        try {
+          const balance = await this.getLeaveBalance(emp.id);
+          return { ...emp, balance };
+        } catch (error) {
+          console.error(`Error getting balance for ${emp.name}:`, error);
+          return {
+            ...emp,
+            balance: { annual: { total: 20, used: 0, remaining: 20 } },
+          };
+        }
       })
     );
 
@@ -126,7 +149,13 @@ export class LeaveModule {
                                 <option value="">-- Chọn nhân viên --</option>
                                 ${employeesWithBalance
                                   .map((emp) => {
-                                    return `<option value="${emp.id}">${emp.name} - Còn ${emp.balance.remaining} ngày</option>`;
+                                    return `<option value="${emp.id}">${
+                                      emp.name
+                                    } - Còn ${
+                                      emp.balance.annual
+                                        ? emp.balance.annual.remaining
+                                        : 20
+                                    } ngày</option>`;
                                   })
                                   .join("")}
                             </select>
@@ -187,13 +216,17 @@ export class LeaveModule {
                             </tr>
                         </thead>
                         <tbody>
-                            ${pendingLeaves
+                            ${pendingLeavesWithNames
                               .map((leave) => {
-                                const emp = leave.employeeId
-                                  ? this.employeeDb.getEmployeeById(
-                                      leave.employeeId
-                                    )
-                                  : { name: "Unknown Employee" };
+                                // Tính số ngày nghỉ
+                                const startDate = new Date(leave.start_date);
+                                const endDate = new Date(leave.end_date);
+                                const daysDiff =
+                                  Math.ceil(
+                                    (endDate - startDate) /
+                                      (1000 * 60 * 60 * 24)
+                                  ) + 1;
+
                                 const typeNames = {
                                   annual: "Phép năm",
                                   sick: "Ốm đau",
@@ -201,18 +234,18 @@ export class LeaveModule {
                                 };
                                 return `
                                     <tr id="leave-row-${leave.id}">
-                                        <td>${leave.employeeId}</td>
-                                        <td>${emp ? emp.name : "N/A"}</td>
+                                        <td>${leave.employee_id}</td>
+                                        <td>${leave.employeeName}</td>
                                         <td>${
                                           typeNames[leave.type] || leave.type
                                         }</td>
                                         <td>${new Date(
-                                          leave.startDate
+                                          leave.start_date
                                         ).toLocaleDateString("vi-VN")}</td>
                                         <td>${new Date(
-                                          leave.endDate
+                                          leave.end_date
                                         ).toLocaleDateString("vi-VN")}</td>
-                                        <td>${leave.days}</td>
+                                        <td>${daysDiff}</td>
                                         <td>${leave.reason || "--"}</td>
                                         <td class="action-buttons">
                                             <button class="btn btn-success btn-small" onclick="window.leaveModule.handleApprove('${
@@ -302,8 +335,8 @@ export class LeaveModule {
   async handleApprove(leaveId, approved) {
     try {
       const leave = await this.approveLeave(leaveId, approved);
-      const emp = leave.employeeId
-        ? await this.employeeDb.getEmployeeById(leave.employeeId)
+      const emp = leave.employee_id
+        ? await this.employeeDb.getEmployeeById(leave.employee_id)
         : { name: "Unknown Employee" };
       const action = approved ? "đã được duyệt" : "đã bị từ chối";
       alert(`Yêu cầu nghỉ phép của ${emp.name} ${action}!`);

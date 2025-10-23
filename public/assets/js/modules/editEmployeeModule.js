@@ -235,7 +235,7 @@ export class EditEmployeeModule {
                         <div class="form-group">
                             <label>Ngày vào làm *</label>
                             <input type="date" id="edit-hiredate" value="${
-                              this.currentEmployee.hireDate
+                              this.currentEmployee.hire_date
                             }" required>
                         </div>
                     </div>
@@ -284,7 +284,7 @@ export class EditEmployeeModule {
       department_id: document.getElementById("edit-department").value,
       position_id: document.getElementById("edit-position").value,
       salary: parseFloat(document.getElementById("edit-salary").value),
-      hireDate: document.getElementById("edit-hiredate").value,
+      hire_date: document.getElementById("edit-hiredate").value,
       address: document.getElementById("edit-address").value.trim(),
     };
 

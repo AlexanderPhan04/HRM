@@ -85,6 +85,15 @@ class PositionController extends BaseController
 
         if (isset($data['title'])) $data['title'] = $this->sanitize($data['title']);
         if (isset($data['description'])) $data['description'] = $this->sanitize($data['description']);
+        
+        // Validate and sanitize salary_base
+        if (isset($data['salary_base'])) {
+            $salary_base = floatval($data['salary_base']);
+            if ($salary_base < 0) {
+                $this->sendError('Salary base cannot be negative', 400);
+            }
+            $data['salary_base'] = $salary_base;
+        }
 
         $success = $this->positionModel->update($id, $data);
 

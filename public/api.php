@@ -31,14 +31,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Start session
 session_start();
 
-// Import controllers (sử dụng đường dẫn mới)
-require_once CONTROLLER_PATH . '/AuthController.php';
-require_once CONTROLLER_PATH . '/EmployeeController.php';
-require_once CONTROLLER_PATH . '/DepartmentController.php';
-require_once CONTROLLER_PATH . '/PositionController.php';
-require_once CONTROLLER_PATH . '/AttendanceController.php';
-require_once CONTROLLER_PATH . '/LeaveController.php';
-require_once CONTROLLER_PATH . '/PerformanceController.php';
+// SPL Autoload - Tự động load class khi cần thiết
+spl_autoload_register(function ($class) {
+    // Tìm file trong các thư mục chính
+    $candidates = [
+        CONTROLLER_PATH . '/' . $class . '.php',
+        MODEL_PATH . '/' . $class . '.php',
+        CONFIG_PATH . '/' . $class . '.php',
+    ];
+    
+    foreach ($candidates as $file) {
+        if (is_file($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 
 // Get request method và URI
 $method = $_SERVER['REQUEST_METHOD'];
