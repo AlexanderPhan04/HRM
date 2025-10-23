@@ -27,8 +27,23 @@ RewriteRule ^$ index.html [L]
     Deny from all
 </Files>
 
-# Allow only api.php
+# Allow only api.php and test files
 <Files "api.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "test-db-connection.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "simple-test.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "api-test.php">
     Order Allow,Deny
     Allow from all
 </Files>
