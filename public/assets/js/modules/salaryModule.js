@@ -29,13 +29,13 @@ export class SalaryModule {
       employees.map(async (emp) => {
         // Tính lương thực nhận cho nhân viên này
         const netSalary = this.calculateNetSalary(emp);
-        // Lấy thông tin phòng ban từ departmentId
+        // Lấy thông tin phòng ban từ department_id
         const department = await this.departmentModule.getDepartmentById(
-          emp.departmentId
+          emp.department_id
         );
-        // Lấy thông tin vị trí từ positionId
+        // Lấy thông tin vị trí từ position_id
         const position = await this.positionModule.getPositionById(
-          emp.positionId
+          emp.position_id
         );
 
         // Trả về object mới với thông tin đầy đủ
@@ -54,17 +54,34 @@ export class SalaryModule {
   async render() {
     const payroll = await this.generatePayrollReport();
 
+    console.log("Payroll data:", payroll);
+    console.log("Payroll length:", payroll.length);
+
     // Tính tổng lương - sử dụng reduce
-    const totalBaseSalary = payroll.reduce(
-      (sum, emp) => sum + (emp.salary || 0),
-      0
-    );
-    const totalBonus = payroll.reduce((sum, emp) => sum + (emp.bonus || 0), 0);
-    const totalDeduction = payroll.reduce(
-      (sum, emp) => sum + (emp.deduction || 0),
-      0
-    );
-    const totalNetSalary = payroll.reduce((sum, emp) => sum + emp.netSalary, 0);
+    const totalBaseSalary = payroll.reduce((sum, emp) => {
+      const salary = parseFloat(emp.salary) || 0;
+      console.log("Employee salary:", emp.salary, "Parsed:", salary);
+      return sum + salary;
+    }, 0);
+    const totalBonus = payroll.reduce((sum, emp) => {
+      const bonus = parseFloat(emp.bonus) || 0;
+      return sum + bonus;
+    }, 0);
+    const totalDeduction = payroll.reduce((sum, emp) => {
+      const deduction = parseFloat(emp.deduction) || 0;
+      return sum + deduction;
+    }, 0);
+    const totalNetSalary = payroll.reduce((sum, emp) => {
+      const netSalary = parseFloat(emp.netSalary) || 0;
+      return sum + netSalary;
+    }, 0);
+
+    console.log("Totals:", {
+      totalBaseSalary,
+      totalBonus,
+      totalDeduction,
+      totalNetSalary,
+    });
 
     return `
             <div class="module-header">
@@ -152,8 +169,8 @@ export class SalaryModule {
   }
 
   // Hiển thị form cập nhật lương
-  showUpdateForm(employeeId) {
-    const employee = this.employeeDb.getEmployeeById(employeeId);
+  async showUpdateForm(employeeId) {
+    const employee = await this.employeeDb.getEmployeeById(employeeId);
     if (!employee) return;
 
     const modal = document.getElementById("update-salary-modal");

@@ -11,8 +11,21 @@ export class SearchEmployeeModule {
 
   // Render giao diện
   async render() {
-    const departments = (await this.departmentModule.getAllDepartments()) || [];
-    const positions = (await this.positionModule.getAllPositions()) || [];
+    let departments = [];
+    let positions = [];
+
+    try {
+      departments = await this.departmentModule.getAllDepartments();
+      positions = await this.positionModule.getAllPositions();
+
+      // Đảm bảo là array
+      departments = Array.isArray(departments) ? departments : [];
+      positions = Array.isArray(positions) ? positions : [];
+    } catch (error) {
+      console.error("Error loading data:", error);
+      departments = [];
+      positions = [];
+    }
 
     return `
             <div class="module-header">
@@ -101,7 +114,7 @@ export class SearchEmployeeModule {
   }
 
   // Xử lý tìm kiếm
-  handleSearch() {
+  async handleSearch() {
     // Lấy tiêu chí tìm kiếm
     const criteria = {
       name: document.getElementById("search-name-pattern").value.trim(),
@@ -117,19 +130,19 @@ export class SearchEmployeeModule {
     };
 
     // Tìm kiếm với higher-order functions
-    this.currentResults = this.performSearch(criteria);
+    this.currentResults = await this.performSearch(criteria);
 
     // Sắp xếp kết quả
     this.sortResults();
 
     // Hiển thị kết quả
-    this.displayResults();
+    await this.displayResults();
   }
 
   // Thực hiện tìm kiếm với filter và regex
-  performSearch(criteria) {
+  async performSearch(criteria) {
     // Bắt đầu với toàn bộ danh sách nhân viên (let cho phép reassign)
-    let results = this.employeeDb.getAllEmployees();
+    let results = await this.employeeDb.getAllEmployees();
 
     // ============ Tìm kiếm theo tên (sử dụng RegExp với error handling) ============
     if (criteria.name) {
@@ -221,7 +234,7 @@ export class SearchEmployeeModule {
   }
 
   // Hiển thị kết quả
-  displayResults() {
+  async displayResults() {
     const container = document.getElementById("search-results-container");
 
     if (this.currentResults.length === 0) {
@@ -236,8 +249,8 @@ export class SearchEmployeeModule {
       return;
     }
 
-    const departments = this.departmentModule.getAllDepartments();
-    const positions = this.positionModule.getAllPositions();
+    const departments = await this.departmentModule.getAllDepartments();
+    const positions = await this.positionModule.getAllPositions();
 
     const getSortIcon = (field) => {
       if (this.sortField === field) {
@@ -302,9 +315,9 @@ export class SearchEmployeeModule {
   }
 
   // Sắp xếp và hiển thị lại
-  sortAndDisplay(field) {
+  async sortAndDisplay(field) {
     this.sortResults(field);
-    this.displayResults();
+    await this.displayResults();
   }
 
   // Format tiền tệ

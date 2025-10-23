@@ -1,17 +1,17 @@
 // app.js - File chính của ứng dụng HRM (MVC Structure)
 // Import tất cả các module từ folder modules
 import { AuthModule } from "./modules/authModule.js";
-import { EmployeeDbModule } from "./modules/employeeDbModule.js";
-import { AddEmployeeModule } from "./modules/addEmployeeModule.js";
-import { EditEmployeeModule } from "./modules/editEmployeeModule.js";
-import { DeleteEmployeeModule } from "./modules/deleteEmployeeModule.js";
-import { SearchEmployeeModule } from "./modules/searchEmployeeModule.js";
-import { DepartmentModule } from "./modules/departmentModule.js";
-import { PositionModule } from "./modules/positionModule.js";
-import { SalaryModule } from "./modules/salaryModule.js";
-import { AttendanceModule } from "./modules/attendanceModule.js";
-import { LeaveModule } from "./modules/leaveModule.js";
-import { PerformanceModule } from "./modules/performanceModule.js";
+import { EmployeeDbModule } from "./modules/employeeDbModule.js?v=202510231200";
+import { AddEmployeeModule } from "./modules/addEmployeeModule.js?v=202510231200";
+import { EditEmployeeModule } from "./modules/editEmployeeModule.js?v=202510231200";
+import { DeleteEmployeeModule } from "./modules/deleteEmployeeModule.js?v=202510231200";
+import { SearchEmployeeModule } from "./modules/searchEmployeeModule.js?v=202510231200";
+import { DepartmentModule } from "./modules/departmentModule.js?v=202510231200";
+import { PositionModule } from "./modules/positionModule.js?v=202510231200";
+import { SalaryModule } from "./modules/salaryModule.js?v=202510231500";
+import { AttendanceModule } from "./modules/attendanceModule.js?v=202510231200";
+import { LeaveModule } from "./modules/leaveModule.js?v=202510231400";
+import { PerformanceModule } from "./modules/performanceModule.js?v=202510231200";
 
 class HRMApp {
   constructor() {

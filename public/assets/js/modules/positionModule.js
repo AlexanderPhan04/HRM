@@ -1,7 +1,7 @@
-// PositionModule.js - Module quản lý vị trí công việc (sử dụng API backend)
+// PositionModule.js - Module quản lý vị trí công việc (kết nối MySQL qua PHP API)
 export class PositionModule {
   constructor() {
-    this.apiBaseUrl = "api.php/positions";
+    this.apiBaseUrl = "./api.php/positions";
   }
 
   // Lấy tất cả vị trí từ API

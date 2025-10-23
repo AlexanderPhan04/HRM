@@ -1,10 +1,10 @@
-// PerformanceModule.js - Module đánh giá hiệu suất (sử dụng API backend)
+// PerformanceModule.js - Module đánh giá hiệu suất (kết nối MySQL qua PHP API)
 export class PerformanceModule {
   constructor(employeeDb, departmentModule, positionModule) {
     this.employeeDb = employeeDb;
     this.departmentModule = departmentModule;
     this.positionModule = positionModule;
-    this.apiBaseUrl = "api.php/performance";
+    this.apiBaseUrl = "./api.php/performance";
   }
 
   // Lấy tất cả đánh giá từ API
@@ -139,8 +139,8 @@ export class PerformanceModule {
                                         <td>${emp.name}</td>
                                         <td>${dept ? dept.name : "N/A"}</td>
                                         <td>⭐ ${(
-                                          emp.avgRating ||
-                                          emp.average_rating ||
+                                          parseFloat(emp.avgRating) ||
+                                          parseFloat(emp.average_rating) ||
                                           0
                                         ).toFixed(2)}/5</td>
                                         <td>${
@@ -171,7 +171,9 @@ export class PerformanceModule {
                                   .map((emp) => {
                                     const avgText =
                                       emp.avgRating > 0
-                                        ? ` (TB: ${emp.avgRating.toFixed(2)})`
+                                        ? ` (TB: ${parseFloat(
+                                            emp.avgRating
+                                          ).toFixed(2)})`
                                         : "";
                                     return `<option value="${emp.id}">${emp.name}${avgText}</option>`;
                                   })
@@ -336,7 +338,7 @@ export class PerformanceModule {
                                 <td>${emp.positionTitle}</td>
                                 <td>${
                                   emp.avgRating > 0
-                                    ? emp.avgRating.toFixed(2)
+                                    ? parseFloat(emp.avgRating).toFixed(2)
                                     : "--"
                                 } ${stars}</td>
                                 <td>${emp.reviewCount}</td>
@@ -367,7 +369,7 @@ export class PerformanceModule {
             <div class="card">
                 <h3>Lịch Sử Đánh Giá: ${employee.name}</h3>
                 <p><strong>Điểm trung bình:</strong> ${
-                  avgRating > 0 ? avgRating.toFixed(2) : "--"
+                  avgRating > 0 ? parseFloat(avgRating).toFixed(2) : "--"
                 }/5 ⭐ (${reviews.length} đánh giá)</p>
                 
                 ${

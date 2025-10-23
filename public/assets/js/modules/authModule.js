@@ -1,4 +1,4 @@
-// AuthModule.js - Module xác thực người dùng (sử dụng API backend)
+// AuthModule.js - Module xác thực người dùng (kết nối MySQL qua PHP API)
 export class AuthModule {
   constructor() {
     this.currentUser = null;

@@ -81,7 +81,7 @@ export class LeaveModule {
   async getLeaveBalance(employeeId) {
     try {
       const response = await fetch(
-        `${this.apiBaseUrl}/balance?employeeId=${employeeId}`
+        `${this.apiBaseUrl}/balance?employee_id=${employeeId}`
       );
       const data = await response.json();
       if (data.success) {
@@ -189,9 +189,11 @@ export class LeaveModule {
                         <tbody>
                             ${pendingLeaves
                               .map((leave) => {
-                                const emp = this.employeeDb.getEmployeeById(
-                                  leave.employeeId
-                                );
+                                const emp = leave.employeeId
+                                  ? this.employeeDb.getEmployeeById(
+                                      leave.employeeId
+                                    )
+                                  : { name: "Unknown Employee" };
                                 const typeNames = {
                                   annual: "Phép năm",
                                   sick: "Ốm đau",
@@ -277,7 +279,9 @@ export class LeaveModule {
         type,
         reason
       );
-      const emp = await this.employeeDb.getEmployeeById(employeeId);
+      const emp = employeeId
+        ? await this.employeeDb.getEmployeeById(employeeId)
+        : { name: "Unknown Employee" };
       this.showMessage(
         `Yêu cầu nghỉ phép cho ${emp.name} đã được gửi (${leave.days} ngày)`,
         "success"
@@ -298,7 +302,9 @@ export class LeaveModule {
   async handleApprove(leaveId, approved) {
     try {
       const leave = await this.approveLeave(leaveId, approved);
-      const emp = await this.employeeDb.getEmployeeById(leave.employeeId);
+      const emp = leave.employeeId
+        ? await this.employeeDb.getEmployeeById(leave.employeeId)
+        : { name: "Unknown Employee" };
       const action = approved ? "đã được duyệt" : "đã bị từ chối";
       alert(`Yêu cầu nghỉ phép của ${emp.name} ${action}!`);
 

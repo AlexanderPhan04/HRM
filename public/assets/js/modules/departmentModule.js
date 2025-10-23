@@ -1,7 +1,7 @@
-// DepartmentModule.js - Module quản lý phòng ban (sử dụng API backend)
+// DepartmentModule.js - Module quản lý phòng ban (kết nối MySQL qua PHP API)
 export class DepartmentModule {
   constructor() {
-    this.apiBaseUrl = "api.php/departments";
+    this.apiBaseUrl = "./api.php/departments";
   }
 
   // Lấy tất cả phòng ban từ API

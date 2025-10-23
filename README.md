@@ -6,6 +6,8 @@
 
 ## Công Nghệ Sử Dụng
 
+### Frontend
+
 - **HTML5**: Cấu trúc trang web
 - **CSS3**: Thiết kế giao diện (responsive)
 - **JavaScript ES6+**: Logic nghiệp vụ
@@ -19,26 +21,40 @@
   - Closures
   - Regular Expressions
 
+### Backend
+
+- **PHP 8.4+**: Server-side logic
+- **MySQL**: Database management
+- **PDO**: Database abstraction layer
+- **MVC Architecture**: Controllers, Models, Views
+- **RESTful API**: JSON endpoints
+
 ## Cấu Trúc Dự Án
 
 ```
 HRM/
-├── index.html                  # File HTML chính
-├── style.css                   # CSS cho giao diện
-├── app.js                      # File JavaScript chính
-├── authModule.js              # Module xác thực
-├── employeeDbModule.js        # Module CSDL nhân viên
-├── addEmployeeModule.js       # Module thêm nhân viên
-├── editEmployeeModule.js      # Module sửa nhân viên
-├── deleteEmployeeModule.js    # Module xóa nhân viên
-├── searchEmployeeModule.js    # Module tìm kiếm nhân viên
-├── departmentModule.js        # Module quản lý phòng ban
-├── positionModule.js          # Module quản lý vị trí
-├── salaryModule.js            # Module quản lý lương
-├── attendanceModule.js        # Module chấm công
-├── leaveModule.js             # Module nghỉ phép
-├── performanceModule.js       # Module đánh giá hiệu suất
-└── README.md                  # File hướng dẫn
+├── public/                    # Frontend (Web Root)
+│   ├── index.html            # File HTML chính
+│   ├── api.php               # API Router
+│   ├── assets/
+│   │   ├── css/style.css     # CSS cho giao diện
+│   │   └── js/
+│   │       ├── app.js        # File JavaScript chính
+│   │       └── modules/      # JavaScript Modules
+│   │           ├── authModule.js
+│   │           ├── employeeDbModule.js
+│   │           ├── addEmployeeModule.js
+│   │           ├── departmentModule.js
+│   │           ├── positionModule.js
+│   │           └── ...
+├── app/                      # Backend (MVC)
+│   ├── Controllers/          # PHP Controllers
+│   ├── Models/              # PHP Models
+│   ├── Config/              # Configuration
+│   └── Views/               # PHP Views
+├── database/                # Database
+│   └── migrations/          # SQL Scripts
+└── README.md               # Documentation
 ```
 
 ## Tính Năng
@@ -52,10 +68,10 @@ HRM/
 
 ### 2. Module Cơ Sở Dữ Liệu Nhân Viên (EmployeeDbModule)
 
-- Lưu trữ dữ liệu trong localStorage
+- Kết nối với MySQL database qua PHP API
 - CRUD operations (Create, Read, Update, Delete)
 - Higher-order functions để filter và sort
-- Tự động khởi tạo 5 nhân viên mẫu
+- Dữ liệu được lưu trữ trong MySQL database
 
 ### 3. Module Thêm Nhân Viên (AddEmployeeModule)
 
@@ -243,16 +259,19 @@ npx http-server -p 8000
 
 ## Lưu Trữ Dữ Liệu
 
-Tất cả dữ liệu được lưu trong **localStorage** với các keys:
+Tất cả dữ liệu được lưu trong **MySQL Database** với các bảng:
 
-- `hrm_users`: Danh sách người dùng
-- `hrm_session`: Phiên đăng nhập
-- `hrm_employees`: Danh sách nhân viên
-- `hrm_departments`: Danh sách phòng ban
-- `hrm_positions`: Danh sách vị trí
-- `hrm_attendance`: Dữ liệu chấm công
-- `hrm_leaves`: Dữ liệu nghỉ phép
-- `hrm_performance`: Dữ liệu đánh giá
+- `users`: Danh sách người dùng
+- `employees`: Danh sách nhân viên
+- `departments`: Danh sách phòng ban
+- `positions`: Danh sách vị trí
+- `attendance`: Dữ liệu chấm công
+- `leaves`: Dữ liệu nghỉ phép
+- `performance_reviews`: Dữ liệu đánh giá
+
+**Session Storage** chỉ được sử dụng cho:
+
+- `hrm_session`: Phiên đăng nhập hiện tại
 
 ## Thách Thức & Giải Pháp
 
@@ -306,6 +325,24 @@ Tất cả dữ liệu được lưu trong **localStorage** với các keys:
 - Ngày không hợp lệ
 - Số âm
 
+## Cài Đặt
+
+### Yêu Cầu Hệ Thống
+
+- **PHP 8.4+** với PDO extension
+- **MySQL 8.0+**
+- **Web Server** (Apache/Nginx) hoặc **Laragon/XAMPP**
+
+### Hướng Dẫn Cài Đặt
+
+1. **Clone repository**
+2. **Cấu hình database**:
+   - Tạo database MySQL tên `hrm_db`
+   - Import file `database/migrations/001_initial_schema.sql`
+3. **Cấu hình kết nối database** trong `app/Config/Database.php`
+4. **Truy cập** `http://localhost/HRM/public/`
+5. **Đăng nhập** với tài khoản mặc định: `admin` / `admin123`
+
 ## Tác Giả
 
 Dự án được phát triển như một assignment học tập về JavaScript nâng cao.
@@ -316,4 +353,4 @@ Dự án này được tạo ra cho mục đích học tập.
 
 ---
 
-**Lưu ý**: Ứng dụng này sử dụng localStorage nên dữ liệu chỉ lưu trên trình duyệt local. Để triển khai thực tế cần backend API và database.
+**Lưu ý**: Ứng dụng này sử dụng MySQL database nên dữ liệu được lưu trữ bền vững trên server. Để triển khai thực tế cần cấu hình database và web server.

@@ -8,18 +8,17 @@ export class AddEmployeeModule {
 
   // Render giao diện thêm nhân viên
   async render() {
-    // Fetch departments và positions trực tiếp
+    // Fetch departments và positions từ modules
     let departments = [];
     let positions = [];
 
     try {
-      const deptResponse = await fetch("api.php/departments");
-      const deptData = await deptResponse.json();
-      departments = Array.isArray(deptData.data) ? deptData.data : [];
+      departments = await this.departmentModule.getAllDepartments();
+      positions = await this.positionModule.getAllPositions();
 
-      const posResponse = await fetch("api.php/positions");
-      const posData = await posResponse.json();
-      positions = Array.isArray(posData.data) ? posData.data : [];
+      // Đảm bảo là array
+      departments = Array.isArray(departments) ? departments : [];
+      positions = Array.isArray(positions) ? positions : [];
     } catch (error) {
       console.error("Error loading data:", error);
       departments = [];
@@ -175,7 +174,7 @@ export class AddEmployeeModule {
 
     // ============ Thêm nhân viên vào database ============
     try {
-      // Await async operation: thêm employee vào localStorage
+      // Await async operation: thêm employee vào database qua API
       await this.employeeDb.addEmployee(employeeData);
 
       // Thành công: hiển thị thông báo

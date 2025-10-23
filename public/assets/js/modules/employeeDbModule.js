@@ -1,7 +1,7 @@
-// EmployeeDbModule.js - Module quản lý cơ sở dữ liệu nhân viên (sử dụng API backend)
+// EmployeeDbModule.js - Module quản lý cơ sở dữ liệu nhân viên (kết nối MySQL qua PHP API)
 export class EmployeeDbModule {
   constructor() {
-    this.apiBaseUrl = "api.php/employees";
+    this.apiBaseUrl = "./api.php/employees";
   }
 
   // Lấy tất cả nhân viên từ API
