@@ -6,9 +6,8 @@
  */
 
 // Định nghĩa các đường dẫn root
-define('ROOT_PATH', dirname(__DIR__));
+define('ROOT_PATH', __DIR__); // HRM/
 define('APP_PATH', ROOT_PATH . '/app');
-define('PUBLIC_PATH', ROOT_PATH . '/public');
 define('CONFIG_PATH', APP_PATH . '/Config');
 define('VIEW_PATH', APP_PATH . '/Views');
 

@@ -6,8 +6,7 @@
 *~
 .DS_Store
 
-# Dependencies
-node_modules/
+# PHP Dependencies
 vendor/
 composer.phar
 
@@ -31,7 +30,6 @@ cache/
 dist/
 build/
 coverage/
-.nyc_output/
 
 # Temporary Files
 tmp/
@@ -46,7 +44,3 @@ backup/
 # OS Files
 Thumbs.db
 desktop.ini
-
-# Package Manager Locks (optional - include if needed)
-# package-lock.json
-# composer.lock

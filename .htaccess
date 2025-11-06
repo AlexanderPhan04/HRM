@@ -1,0 +1,42 @@
+# .htaccess - Apache configuration cho clean URLs
+
+# (Chỉ cần khi dùng Apache/XAMPP)
+
+# Enable Rewrite Engine
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /HRM/backend/
+    
+    # Redirect tất cả requests đến api.php (trừ files tồn tại)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
+</IfModule>
+
+# CORS Headers
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>
+
+# Security Headers
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Disable directory listing
+
+Options -Indexes
+
+# Protect sensitive files
+
+<FilesMatch "\.(sql|md|log|ini)$">
+Order allow,deny
+Deny from all
+</FilesMatch>
