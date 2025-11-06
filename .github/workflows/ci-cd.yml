@@ -370,7 +370,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_REMOTE_PATH }}/public_html/
+          server-dir: /
           local-dir: ./deploy/
           exclude: |
             **/.git*
@@ -388,7 +388,7 @@ jobs:
           echo "  ✅ PRODUCTION DEPLOYMENT SUCCESSFUL"
           echo "================================================"
           echo "🌐 Website: https://alexstudio.id.vn"
-          echo "📁 All files in: ${{ secrets.FTP_REMOTE_PATH }}/public_html/"
+          echo "📁 All files uploaded to FTP root (public_html/)"
           echo "================================================"
           echo "⚠️ MANUAL STEPS REQUIRED:"
           echo "1. Import database/migrations/001_initial_schema.sql"
