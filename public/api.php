@@ -9,8 +9,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Định nghĩa đường dẫn root
-define('ROOT_PATH', dirname(__DIR__));
+// Định nghĩa đường dẫn root - SỬA CHO HOSTING
+define('ROOT_PATH', __DIR__); // Trên hosting: public_html/
 define('APP_PATH', ROOT_PATH . '/app');
 define('CONFIG_PATH', APP_PATH . '/Config');
 define('CONTROLLER_PATH', APP_PATH . '/Controllers');
@@ -64,6 +64,11 @@ $path = trim($path, '/');
 // Nếu path rỗng, kiểm tra PATH_INFO
 if (empty($path) && isset($_SERVER['PATH_INFO'])) {
     $path = trim($_SERVER['PATH_INFO'], '/');
+}
+
+// Nếu vẫn rỗng, kiểm tra endpoint parameter từ .htaccess
+if (empty($path) && isset($_GET['endpoint'])) {
+    $path = $_GET['endpoint'];
 }
 
 // Split path thành segments

@@ -6,7 +6,7 @@ RewriteEngine On
 # Redirect API calls để ẩn api.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^api/(.*)$ api.php/$1 [QSA,L]
+RewriteRule ^api/(.*)$ api.php?endpoint=$1 [QSA,L]
 
 # Redirect root to index.html
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -44,6 +44,26 @@ RewriteRule ^$ index.html [L]
 </Files>
 
 <Files "api-test.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "db-debug.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "test-api-direct.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "debug-routing.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+<Files "debug-routing.php">
     Order Allow,Deny
     Allow from all
 </Files>
