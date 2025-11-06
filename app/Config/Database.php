@@ -14,6 +14,12 @@ class Database
     private $password = "ZdvtMh4aYDnvPbu8N4WU"; // Password từ hosting
     private $conn = null;
 
+        // Thông tin kết nối database - CẬP NHẬT CHO Localhost
+    // private $host = "localhost"; // Thường là localhost trên shared hosting
+    // private $db_name = "hrm_system"; // Tên database trên hosting
+    // private $username = "root"; // Username từ hosting
+    // private $password = "quan2004"; // Password từ hosting
+    // private $conn = null;
     /**
      * Singleton pattern - Đảm bảo chỉ có 1 connection duy nhất
      * @return PDO|null
