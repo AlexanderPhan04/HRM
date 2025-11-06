@@ -34,7 +34,7 @@ jobs:
         continue-on-error: true
 
       - name: Lint PHP files
-        run: vendor/bin/phpcs --standard=PSR12 app/ public/api.php || echo "PHP linting completed"
+        run: vendor/bin/phpcs --standard=PSR12 app/ api.php || echo "PHP linting completed"
         continue-on-error: true
 
   # ============================================
@@ -51,16 +51,16 @@ jobs:
       - name: Count JavaScript Files
         run: |
           echo "=== JavaScript Module Count ==="
-          find public/assets/js/modules -name "*.js" -type f | wc -l
+          find assets/js -name "*.js" -type f 2>/dev/null | wc -l || echo "0"
           echo "=== JavaScript Files ==="
-          find public/assets/js/modules -name "*.js" -type f
+          find assets/js -name "*.js" -type f 2>/dev/null || echo "No JS files found"
 
       - name: Check for Debugging Code
         run: |
           echo "Checking for console.log..."
-          grep -r "console.log" public/assets/js/ || echo "✅ No console.log found"
+          grep -r "console.log" assets/js/ 2>/dev/null || echo "✅ No console.log found"
           echo "Checking for debugger..."
-          grep -r "debugger" public/assets/js/ || echo "✅ No debugger found"
+          grep -r "debugger" assets/js/ 2>/dev/null || echo "✅ No debugger found"
 
       - name: Validate ES6 Module Syntax
         run: |
@@ -100,7 +100,10 @@ jobs:
 
       - name: Import database schema
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -ptest_password hrm_system_test < database/migrations/001_initial_schema.sql
+          # Remove database-specific commands and import into test database
+          sed '/^USE hrm_system;/d' database/migrations/001_initial_schema.sql | \
+          sed 's/CREATE DATABASE IF NOT EXISTS hrm_system/-- CREATE DATABASE IF NOT EXISTS hrm_system/' | \
+          mysql -h 127.0.0.1 -P 3306 -u root -ptest_password hrm_system_test
 
       - name: Validate schema
         run: |
@@ -146,7 +149,10 @@ jobs:
 
       - name: Import database schema
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -ptest_password hrm_system_test < database/migrations/001_initial_schema.sql
+          # Remove database-specific commands and import into test database
+          sed '/^USE hrm_system;/d' database/migrations/001_initial_schema.sql | \
+          sed 's/CREATE DATABASE IF NOT EXISTS hrm_system/-- CREATE DATABASE IF NOT EXISTS hrm_system/' | \
+          mysql -h 127.0.0.1 -P 3306 -u root -ptest_password hrm_system_test
 
       - name: Install PHPUnit
         run: composer require --dev phpunit/phpunit || true
@@ -174,12 +180,12 @@ jobs:
       - name: Check for SQL Injection vulnerabilities
         run: |
           echo "Checking PHP files for potential SQL injection..."
-          grep -r "mysql_query\|mysqli_query" app/ public/ || echo "✅ No dangerous MySQL queries found"
+          grep -r "mysql_query\|mysqli_query" app/ *.php 2>/dev/null || echo "✅ No dangerous MySQL queries found"
 
       - name: Check for hardcoded credentials
         run: |
           echo "Checking for hardcoded passwords..."
-          grep -ri "password.*=.*['\"][^$]" app/ public/ --exclude-dir=vendor | grep -v "password_hash\|password_verify" || echo "✅ No hardcoded passwords found"
+          grep -ri "password.*=.*['\"][^$]" app/ *.php --exclude-dir=vendor 2>/dev/null | grep -v "password_hash\|password_verify" || echo "✅ No hardcoded passwords found"
 
       - name: Check for exposed config files
         run: |
@@ -203,11 +209,14 @@ jobs:
           mkdir -p dist
 
           # Copy application files (Vanilla JS + PHP)
-          cp -r public dist/
+          cp -r assets dist/
           cp -r app dist/
           cp -r database dist/
-          cp README.md dist/
-          cp CICD_GUIDE.md dist/ || true
+          cp *.html dist/ 2>/dev/null || true
+          cp *.js dist/ 2>/dev/null || true
+          cp *.php dist/ 2>/dev/null || true
+          cp README.md dist/ 2>/dev/null || true
+          cp CICD_GUIDE.md dist/ 2>/dev/null || true
 
           # Create .env.example
           cat > dist/.env.example << 'EOF'
