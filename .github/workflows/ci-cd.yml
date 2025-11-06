@@ -297,74 +297,31 @@ jobs:
       - name: Prepare deployment structure
         run: |
           echo "================================================"
-          echo "  Preparing files for Shared Hosting"
-          echo "  TẤT CẢ trong public_html/"
+          echo "  Chuẩn bị deploy TẤT CẢ files (Học tập)"
           echo "================================================"
 
           # Create deployment directory
           mkdir -p deploy
 
-          # Copy frontend files
+          # Copy TẤT CẢ (trừ .git và node_modules)
           cp -r assets deploy/
-          cp index.html deploy/
-          cp *.js deploy/ 2>/dev/null || true
-
-          # Copy backend code (TRONG public_html với .htaccess bảo vệ)
           cp -r app deploy/
           cp -r database deploy/
+          cp -r backup deploy/ 2>/dev/null || true
+          cp -r hostOld deploy/ 2>/dev/null || true
+          cp -r tests deploy/ 2>/dev/null || true
+          cp -r scripts deploy/ 2>/dev/null || true
+          cp -r doc deploy/ 2>/dev/null || true
 
-          # Copy main .htaccess (đã được cấu hình đúng cho shared hosting)
+          # Copy files
+          cp index.html deploy/
+          cp api.php deploy/
           cp .htaccess deploy/ 2>/dev/null || true
+          cp *.md deploy/ 2>/dev/null || true
+          cp *.json deploy/ 2>/dev/null || true
+          cp *.xml deploy/ 2>/dev/null || true
 
-          # Create .htaccess để chặn truy cập vào app/
-          cat > deploy/app/.htaccess << 'HTEOF'
-          # Chặn truy cập trực tiếp vào backend code
-          Order Deny,Allow
-          Deny from all
-          HTEOF
-
-          # Create .htaccess để chặn truy cập vào database/
-          cat > deploy/database/.htaccess << 'HTEOF'
-          # Chặn truy cập trực tiếp vào database files
-          Order Deny,Allow
-          Deny from all
-          HTEOF
-
-          # Create api.php với đường dẫn đúng (cùng cấp với app/)
-          cat > deploy/api.php << 'APIEOF'
-          <?php
-          /**
-           * API Entry Point (Shared Hosting)
-           * Tất cả files trong cùng public_html/
-           */
-
-          header('Access-Control-Allow-Origin: *');
-          header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-          header('Access-Control-Allow-Headers: Content-Type, Authorization');
-          header('Content-Type: application/json');
-
-          if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-              http_response_code(200);
-              exit();
-          }
-
-          // Đường dẫn cho shared hosting (tất cả trong public_html/)
-          define('ROOT_PATH', __DIR__); // public_html/
-          define('APP_PATH', ROOT_PATH . '/app');
-          define('CONFIG_PATH', APP_PATH . '/Config');
-          define('CONTROLLER_PATH', APP_PATH . '/Controllers');
-          define('MODEL_PATH', APP_PATH . '/Models');
-
-          // Load config
-          require_once CONFIG_PATH . '/Database.php';
-          require_once APP_PATH . '/Core/Router.php';
-
-          // Initialize router
-          $router = new Router();
-          $router->handleRequest();
-          APIEOF
-
-          echo "✅ Deployment structure prepared"
+          echo "✅ Đã copy TẤT CẢ files!"
           ls -la deploy/
 
       - name: Deploy to Shared Hosting via FTP
@@ -379,30 +336,18 @@ jobs:
             **/.git*
             **/.git*/**
             **/node_modules/**
-            **/vendor/**
-            **/*.md
-            **/tests/**
-            **/.env
-            **/backup/**
-            **/hostOld/**
-            app/Config/Database.php
 
       - name: Deployment Complete
         run: |
           echo "================================================"
-          echo "  ✅ PRODUCTION DEPLOYMENT SUCCESSFUL"
+          echo "  ✅ DEPLOY THÀNH CÔNG - DỰ ÁN HỌC TẬP"
           echo "================================================"
           echo "🌐 Website: https://alexstudio.id.vn"
-          echo "📁 All files uploaded to FTP root (public_html/)"
+          echo "📁 Đã upload TẤT CẢ files!"
           echo "================================================"
-          echo "⚠️ MANUAL STEPS REQUIRED:"
-          echo "1. Import database/migrations/001_initial_schema.sql"
-          echo "2. Update app/Config/Database.php with production credentials"
-          echo "3. Test login: admin / admin123"
-          echo "================================================"
-          echo "🔒 SECURITY:"
-          echo "✅ app/.htaccess chặn truy cập backend"
-          echo "✅ database/.htaccess chặn truy cập SQL files"
+          echo "📋 TODO:"
+          echo "1. Kiểm tra website hoạt động"
+          echo "2. Đăng nhập: admin / admin123"
           echo "================================================"
 
   # ============================================
