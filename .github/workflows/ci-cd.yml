@@ -313,6 +313,9 @@ jobs:
           cp -r app deploy/
           cp -r database deploy/
 
+          # Copy main .htaccess (đã được cấu hình đúng cho shared hosting)
+          cp .htaccess deploy/ 2>/dev/null || true
+
           # Create .htaccess để chặn truy cập vào app/
           cat > deploy/app/.htaccess << 'HTEOF'
           # Chặn truy cập trực tiếp vào backend code
@@ -381,6 +384,8 @@ jobs:
             **/tests/**
             **/.env
             **/backup/**
+            **/hostOld/**
+            app/Config/Database.php
 
       - name: Deployment Complete
         run: |

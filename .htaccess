@@ -1,42 +1,64 @@
-# .htaccess - Apache configuration cho clean URLs
+# .htaccess - URL Rewriting cho HRM System (Shared Hosting)
+# Đặt file này trong public_html/
 
-# (Chỉ cần khi dùng Apache/XAMPP)
+RewriteEngine On
 
-# Enable Rewrite Engine
+# Redirect API calls để ẩn api.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ api.php?endpoint=$1 [QSA,L]
 
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /HRM/backend/
-    
-    # Redirect tất cả requests đến api.php (trừ files tồn tại)
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
-</IfModule>
+# Redirect root to index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$ index.html [L]
 
-# CORS Headers
-
+# Security headers
 <IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 </IfModule>
 
-# Security Headers
-
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
-</IfModule>
-
 # Disable directory listing
-
 Options -Indexes
 
-# Protect sensitive files
+# Hide sensitive files - ALLOW ONLY SPECIFIC PHP FILES
+<Files "*.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
 
+# Allow api.php to be accessed
+<Files "api.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Allow index.html
+<Files "index.html">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Protect sensitive files
 <FilesMatch "\.(sql|md|log|ini)$">
-Order allow,deny
-Deny from all
+    Order allow,deny
+    Deny from all
 </FilesMatch>
+
+# Protect app/ directory from direct access
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/app/
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# Protect database/ directory from direct access
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/database/
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
