@@ -269,33 +269,126 @@ jobs:
           echo "================================================"
 
   # ============================================
-  # JOB 8: Deploy to Production
+  # JOB 8: Deploy to Production via FTP
   # ============================================
   deploy-production:
-    name: Deploy to Production
+    name: Deploy to Production (FTP)
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
     # Uncomment after setting up environments in GitHub Settings
     # environment:
     #   name: production
-    #   url: https://hrm.example.com
+    #   url: https://alexstudio.id.vn
 
     steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: hrm-deployment-package
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Deploy Info
+      - name: Prepare deployment structure
         run: |
           echo "================================================"
-          echo "  Production Deployment - Vanilla JS + PHP"
+          echo "  Preparing files for Shared Hosting"
           echo "================================================"
-          echo "✅ No Node.js dependencies"
-          echo "✅ No build process required"
-          echo "✅ Direct file deployment"
-          echo "✅ Pure PHP backend + Vanilla JavaScript frontend"
+
+          # Create deployment directories
+          mkdir -p deploy/public_html
+          mkdir -p deploy/app
+          mkdir -p deploy/database
+
+          # Copy files to public_html (web root)
+          cp -r assets deploy/public_html/
+          cp index.html deploy/public_html/
+          cp *.js deploy/public_html/ 2>/dev/null || true
+
+          # Create api.php for public_html with correct paths
+          cat > deploy/public_html/api.php << 'APIEOF'
+          <?php
+          /**
+           * API Entry Point (Production - Shared Hosting)
+           * File này nằm trong public_html/
+           */
+
+          header('Access-Control-Allow-Origin: *');
+          header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+          header('Access-Control-Allow-Headers: Content-Type, Authorization');
+          header('Content-Type: application/json');
+
+          if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+              http_response_code(200);
+              exit();
+          }
+
+          // Định nghĩa đường dẫn cho shared hosting
+          define('ROOT_PATH', dirname(__DIR__)); // Lên 1 cấp từ public_html/
+          define('APP_PATH', ROOT_PATH . '/app');
+          define('CONFIG_PATH', APP_PATH . '/Config');
+          define('CONTROLLER_PATH', APP_PATH . '/Controllers');
+          define('MODEL_PATH', APP_PATH . '/Models');
+
+          // Load config
+          require_once CONFIG_PATH . '/Database.php';
+          require_once APP_PATH . '/Core/Router.php';
+
+          // Initialize router
+          $router = new Router();
+          $router->handleRequest();
+          APIEOF
+
+          # Copy backend code (outside public_html)
+          cp -r app deploy/
+          cp -r database deploy/
+
+          # Create .htaccess for security
+          cat > deploy/.htaccess << 'HTEOF'
+          # Deny access to everything outside public_html
+          Deny from all
+          HTEOF
+
+          echo "✅ Deployment structure prepared"
+          ls -la deploy/
+
+      - name: Deploy to Shared Hosting via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}/
+          local-dir: ./deploy/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/vendor/**
+            **/*.md
+            **/tests/**
+            **/.env
+            **/backup/**
+
+      - name: Upload public_html files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}/public_html/
+          local-dir: ./deploy/public_html/
+
+      - name: Deployment Complete
+        run: |
+          echo "================================================"
+          echo "  ✅ PRODUCTION DEPLOYMENT SUCCESSFUL"
+          echo "================================================"
+          echo "🌐 Website: https://alexstudio.id.vn"
+          echo "📁 Backend: ${{ secrets.FTP_REMOTE_PATH }}/app/"
+          echo "📁 Database: ${{ secrets.FTP_REMOTE_PATH }}/database/"
+          echo "📁 Public: ${{ secrets.FTP_REMOTE_PATH }}/public_html/"
+          echo "================================================"
+          echo "⚠️ MANUAL STEPS REQUIRED:"
+          echo "1. Import database/migrations/001_initial_schema.sql"
+          echo "2. Update app/Config/Database.php with production credentials"
+          echo "3. Test login: admin / admin123"
           echo "================================================"
 
   # ============================================

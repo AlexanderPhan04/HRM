@@ -16,6 +16,12 @@ composer.phar
 .env.production
 app/Config/Database.php.local
 
+# FTP & Hosting Credentials (SECURITY)
+FTPHostAccout.md
+**/FTPHostAccout.md
+ftp-credentials.*
+hosting-info.*
+
 # Logs
 *.log
 logs/
