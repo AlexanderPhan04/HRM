@@ -1,0 +1,52 @@
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies
+node_modules/
+vendor/
+composer.phar
+
+# Environment & Config
+.env
+.env.local
+.env.production
+app/Config/Database.php.local
+
+# Logs
+*.log
+logs/
+*.sql.gz
+
+# Cache
+cache/
+*.cache
+.phpunit.cache/
+
+# Build & Test Output
+dist/
+build/
+coverage/
+.nyc_output/
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+
+# Backup Files
+*.bak
+*.backup
+backup/
+
+# OS Files
+Thumbs.db
+desktop.ini
+
+# Package Manager Locks (optional - include if needed)
+# package-lock.json
+# composer.lock
