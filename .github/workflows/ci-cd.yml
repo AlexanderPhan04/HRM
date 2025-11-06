@@ -297,7 +297,7 @@ jobs:
       - name: Prepare deployment structure
         run: |
           echo "================================================"
-          echo "  Chuẩn bị deploy TẤT CẢ files (Học tập)"
+          echo "  Chuẩn bị deploy (bỏ .md, .git, tests)"
           echo "================================================"
 
           # Create deployment directory
@@ -321,7 +321,8 @@ jobs:
           cp *.json deploy/ 2>/dev/null || true
           cp *.xml deploy/ 2>/dev/null || true
 
-          echo "✅ Đã copy TẤT CẢ files!"
+          echo "✅ Đã copy files (trừ .md, tests)"
+          echo "📋 Files sẽ deploy:"
           ls -la deploy/
 
       - name: Deploy to Shared Hosting via FTP
@@ -336,18 +337,19 @@ jobs:
             **/.git*
             **/.git*/**
             **/node_modules/**
+            **/*.md
+            **/tests/**
 
       - name: Deployment Complete
         run: |
           echo "================================================"
-          echo "  ✅ DEPLOY THÀNH CÔNG - DỰ ÁN HỌC TẬP"
+          echo "  ✅ DEPLOY THÀNH CÔNG"
           echo "================================================"
           echo "🌐 Website: https://alexstudio.id.vn"
-          echo "📁 Đã upload TẤT CẢ files!"
+          echo "📁 Đã upload (bỏ .md, .git, tests/)"
           echo "================================================"
-          echo "📋 TODO:"
-          echo "1. Kiểm tra website hoạt động"
-          echo "2. Đăng nhập: admin / admin123"
+          echo "✅ Đã upload: Code, assets, database, backup"
+          echo "❌ Không upload: *.md, .git, tests/"
           echo "================================================"
 
   # ============================================
