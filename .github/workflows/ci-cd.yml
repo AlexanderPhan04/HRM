@@ -333,23 +333,30 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /
           local-dir: ./deploy/
+          # Incremental deployment - chỉ upload file thay đổi
+          state-name: .ftp-deploy-sync-state.json
+          dry-run: false
+          # Tự động xóa file trên server nếu đã xóa trong Git
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/*.md
             **/tests/**
+          log-level: standard
 
       - name: Deployment Complete
         run: |
           echo "================================================"
-          echo "  ✅ DEPLOY THÀNH CÔNG"
+          echo "  ✅ INCREMENTAL DEPLOY THÀNH CÔNG"
           echo "================================================"
           echo "🌐 Website: https://alexstudio.id.vn"
-          echo "📁 Đã upload (bỏ .md, .git, tests/)"
+          echo "⚡ Chỉ upload files đã thay đổi (nhanh hơn!)"
           echo "================================================"
-          echo "✅ Đã upload: Code, assets, database, backup"
-          echo "❌ Không upload: *.md, .git, tests/"
+          echo "✅ Upload: Code thay đổi, assets, database"
+          echo "❌ Bỏ qua: *.md, .git, tests/"
+          echo "🗑️  Tự động xóa: Files đã xóa trong Git"
           echo "================================================"
 
   # ============================================
