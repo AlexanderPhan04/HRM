@@ -18,6 +18,22 @@ class EmailService
     }
 
     /**
+     * Tự động detect base URL (localhost hoặc production)
+     * @return string
+     */
+    private function getBaseUrl()
+    {
+        // Kiểm tra nếu đang chạy trên localhost
+        $isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80']);
+
+        if ($isLocalhost) {
+            return 'http://localhost/HRM';
+        }
+
+        return 'https://alexstudio.id.vn';
+    }
+
+    /**
      * Gửi email xác thực đăng ký
      * @param string $to Email người nhận
      * @param string $fullname Tên người nhận
@@ -28,8 +44,9 @@ class EmailService
     {
         $subject = "Xác thực tài khoản HRM System";
 
-        // Tạo link xác thực (điều chỉnh domain cho phù hợp)
-        $verificationLink = "https://alexstudio.id.vn/verify.php?token=" . $verificationToken;
+        // Tạo link xác thực - Tự động detect localhost hoặc production
+        $baseUrl = $this->getBaseUrl();
+        $verificationLink = $baseUrl . "/index.html?verify=" . $verificationToken;
 
         $body = $this->getVerificationEmailTemplate($fullname, $verificationLink);
 

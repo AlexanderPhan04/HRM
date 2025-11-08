@@ -15,11 +15,7 @@ ALTER TABLE users ADD COLUMN verification_token VARCHAR(64) DEFAULT NULL AFTER e
 -- Thêm cột token_expires_at
 ALTER TABLE users ADD COLUMN token_expires_at DATETIME DEFAULT NULL AFTER verification_token;
 
--- Thêm cột created_at
-ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER token_expires_at;
-
--- Thêm cột updated_at
-ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
+-- NOTE: Bỏ qua created_at và updated_at vì đã có sẵn trong bảng users
 
 -- Tạo index cho email
 CREATE INDEX idx_email ON users(email);
@@ -30,9 +26,7 @@ CREATE INDEX idx_verification_token ON users(verification_token);
 -- Cập nhật user admin hiện tại (nếu chưa có email)
 UPDATE users 
 SET email = 'admin@hrm.com', 
-    email_verified = TRUE,
-    created_at = NOW(),
-    updated_at = NOW()
+    email_verified = TRUE
 WHERE username = 'admin';
 
 -- Hiển thị kết quả

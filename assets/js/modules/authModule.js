@@ -9,6 +9,43 @@ export class AuthModule {
   // Khởi tạo module
   init() {
     this.checkSession();
+    this.checkEmailVerification(); // Kiểm tra link verify từ email
+  }
+
+  // Kiểm tra URL có chứa token verify không
+  checkEmailVerification() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyToken = urlParams.get("verify");
+
+    if (verifyToken) {
+      this.verifyEmailToken(verifyToken);
+    }
+  }
+
+  // Gọi API verify email
+  async verifyEmailToken(token) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/auth/verify/${token}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("✅ Xác thực email thành công! Bạn có thể đăng nhập ngay.");
+      } else {
+        alert("❌ " + (data.message || "Token không hợp lệ hoặc đã hết hạn."));
+      }
+
+      // Xóa query string và reload trang login
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error("Verification error:", error);
+      alert("❌ Không thể kết nối đến server.");
+    }
   }
 
   // Render form đăng nhập (sử dụng template literals và DOM manipulation)
@@ -63,6 +100,10 @@ export class AuthModule {
                 <div class="form-group">
                     <label>Họ tên</label>
                     <input type="text" id="register-fullname" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" required placeholder="example@gmail.com">
                 </div>
                 <button type="submit" class="btn btn-primary">Đăng ký</button>
                 <p class="auth-toggle" id="show-login">Đã có tài khoản? Đăng nhập</p>
@@ -121,6 +162,7 @@ export class AuthModule {
     const password = document.getElementById("register-password").value;
     const confirm = document.getElementById("register-confirm").value;
     const fullname = document.getElementById("register-fullname").value.trim();
+    const email = document.getElementById("register-email").value.trim();
 
     // Validate: Kiểm tra mật khẩu và xác nhận khớp nhau
     if (password !== confirm) {
@@ -134,6 +176,13 @@ export class AuthModule {
       return;
     }
 
+    // Validate: Kiểm tra email hợp lệ
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      alert("Email không hợp lệ!");
+      return;
+    }
+
     try {
       // Gọi API register
       const response = await fetch(`${this.apiBaseUrl}/auth/register`, {
@@ -141,13 +190,15 @@ export class AuthModule {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password, fullname }),
+        body: JSON.stringify({ username, password, fullname, email }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert("Đăng ký thành công! Vui lòng đăng nhập.");
+        alert(
+          "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản."
+        );
         this.renderLoginForm();
       } else {
         alert(data.message || "Đăng ký thất bại!");
