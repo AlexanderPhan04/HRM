@@ -7,6 +7,12 @@
 require_once CONTROLLER_PATH . '/BaseController.php';
 require_once MODEL_PATH . '/UserModel.php';
 
+// Định nghĩa SERVICES_PATH nếu chưa có
+if (!defined('SERVICES_PATH')) {
+    define('SERVICES_PATH', APP_PATH . '/Services');
+}
+require_once SERVICES_PATH . '/EmailService.php';
+
 class AuthController extends BaseController
 {
     private $userModel;
@@ -37,6 +43,11 @@ class AuthController extends BaseController
         $user = $this->userModel->verifyLogin($username, $password);
 
         if ($user) {
+            // Kiểm tra email đã được verify chưa (nếu có email)
+            if (isset($user['email']) && !empty($user['email']) && !$user['email_verified']) {
+                $this->sendError('Please verify your email before logging in. Check your inbox.', 403);
+            }
+
             // Tạo session token đơn giản (trong thực tế nên dùng JWT)
             $token = bin2hex(random_bytes(32));
 
@@ -60,17 +71,22 @@ class AuthController extends BaseController
     }
 
     /**
-     * Handle register request
+     * Handle register request WITH EMAIL VERIFICATION
      * POST /api/auth/register
      */
     public function register()
     {
         $data = $this->getJsonInput();
 
-        // Validate required fields
-        $missing = $this->validateRequired($data, ['username', 'password', 'fullname']);
+        // Validate required fields (bao gồm email)
+        $missing = $this->validateRequired($data, ['username', 'password', 'fullname', 'email']);
         if ($missing) {
             $this->sendError('Missing fields: ' . implode(', ', $missing), 400);
+        }
+
+        // Validate email format
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $this->sendError('Invalid email format', 400);
         }
 
         // Validate password length
@@ -84,20 +100,80 @@ class AuthController extends BaseController
             $this->sendError('Username already exists', 409);
         }
 
+        // Check if email exists
+        $existingEmail = $this->userModel->findByEmail($data['email']);
+        if ($existingEmail) {
+            $this->sendError('Email already exists', 409);
+        }
+
         // Create new user
         $userData = [
             'username' => $this->sanitize($data['username']),
             'password' => $data['password'],
             'fullname' => $this->sanitize($data['fullname']),
+            'email' => $this->sanitize($data['email']),
             'role' => $data['role'] ?? 'employee'
         ];
 
-        $userId = $this->userModel->create($userData);
+        $result = $this->userModel->create($userData);
 
-        if ($userId) {
-            $this->sendSuccess(['user_id' => $userId], 'Registration successful');
+        if ($result && isset($result['user_id'])) {
+            // Gửi email xác thực
+            try {
+                $emailService = new EmailService();
+                $emailSent = $emailService->sendVerificationEmail(
+                    $userData['email'],
+                    $userData['fullname'],
+                    $result['verification_token']
+                );
+
+                $message = $emailSent
+                    ? 'Registration successful! Please check your email to verify your account.'
+                    : 'Registration successful but email sending failed. Please contact admin.';
+
+                $this->sendSuccess([
+                    'user_id' => $result['user_id'],
+                    'email_sent' => $emailSent
+                ], $message);
+            } catch (Exception $e) {
+                error_log("Email sending error: " . $e->getMessage());
+                $this->sendSuccess([
+                    'user_id' => $result['user_id'],
+                    'email_sent' => false
+                ], 'Registration successful but email sending failed. Please contact admin.');
+            }
         } else {
             $this->sendError('Registration failed', 500);
+        }
+    }
+
+    /**
+     * Verify email address
+     * GET /api/auth/verify/:token
+     */
+    public function verifyEmail($token)
+    {
+        if (empty($token)) {
+            $this->sendError('Verification token is required', 400);
+        }
+
+        // Tìm user với token này
+        $user = $this->userModel->findByVerificationToken($token);
+
+        if (!$user) {
+            $this->sendError('Invalid or expired verification token', 400);
+        }
+
+        // Verify email
+        $verified = $this->userModel->verifyEmail($token);
+
+        if ($verified) {
+            $this->sendSuccess([
+                'username' => $user['username'],
+                'email' => $user['email']
+            ], 'Email verified successfully! You can now login.');
+        } else {
+            $this->sendError('Email verification failed', 500);
         }
     }
 
