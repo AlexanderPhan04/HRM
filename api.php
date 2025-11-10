@@ -39,7 +39,7 @@ spl_autoload_register(function ($class) {
         MODEL_PATH . '/' . $class . '.php',
         CONFIG_PATH . '/' . $class . '.php',
     ];
-    
+
     foreach ($candidates as $file) {
         if (is_file($file)) {
             require_once $file;
@@ -108,6 +108,9 @@ try {
             $controller->login();
         } elseif ($id === 'register' && $method === 'POST') {
             $controller->register();
+        } elseif ($id === 'verify' && $action && $method === 'GET') {
+            // GET /api/auth/verify/:token
+            $controller->verifyEmail($action);
         } elseif ($id === 'logout' && $method === 'POST') {
             $controller->logout();
         } elseif ($id === 'check' && $method === 'GET') {
