@@ -48,76 +48,109 @@ export class AuthModule {
     }
   }
 
-  // Render form đăng nhập (sử dụng template literals và DOM manipulation)
+  // Render form đăng nhập (Modern Design)
   renderLoginForm() {
-    // Lấy element container để inject form
     const container = document.getElementById("auth-form-container");
-    // Sử dụng template literals (backticks) để tạo HTML string
-    container.innerHTML = `
-            <form id="login-form" class="auth-form">
-                <div class="form-group">
-                    <label>Tên đăng nhập</label>
-                    <input type="text" id="login-username" required>
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Đăng nhập</button>
-                <p class="auth-toggle" id="show-register">Chưa có tài khoản? Đăng ký</p>
-            </form>
-        `;
+    container.className = "auth-container"; // Reset class
 
-    // Gắn event listener cho form submit
+    container.innerHTML = `
+      <div class="form-container sign-in">
+        <form id="login-form" class="auth-form">
+          <h1>Đăng nhập</h1>
+          <div class="social-icons">
+            <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+          <span>hoặc sử dụng tài khoản hệ thống</span>
+          <div class="form-group">
+            <input type="text" id="login-username" placeholder="Tên đăng nhập" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="login-password" placeholder="Mật khẩu" required>
+          </div>
+          <a href="#">Quên mật khẩu?</a>
+          <button type="submit" class="btn">Đăng nhập</button>
+        </form>
+      </div>
+      
+      <div class="form-container sign-up">
+        <form id="register-form" class="auth-form">
+          <h1>Tạo tài khoản</h1>
+          <div class="social-icons">
+            <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+          <span>hoặc đăng ký bằng email</span>
+          <div class="form-group">
+            <input type="text" id="register-username" placeholder="Tên đăng nhập" required>
+          </div>
+          <div class="form-group">
+            <input type="text" id="register-fullname" placeholder="Họ và tên" required>
+          </div>
+          <div class="form-group">
+            <input type="email" id="register-email" placeholder="Email" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="register-password" placeholder="Mật khẩu" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="register-confirm" placeholder="Xác nhận mật khẩu" required>
+          </div>
+          <button type="submit" class="btn">Đăng ký</button>
+        </form>
+      </div>
+      
+      <div class="toggle-container">
+        <div class="toggle">
+          <div class="toggle-panel toggle-left">
+            <h1>Chào mừng trở lại!</h1>
+            <p>Đăng nhập để sử dụng đầy đủ tính năng của hệ thống</p>
+            <button class="hidden" id="login">Đăng nhập</button>
+          </div>
+          <div class="toggle-panel toggle-right">
+            <h1>Xin chào!</h1>
+            <p>Đăng ký tài khoản để sử dụng hệ thống quản lý nhân sự</p>
+            <button class="hidden" id="register">Đăng ký</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Toggle between login and register
+    const authContainer = container;
+    const registerBtn = document.getElementById("register");
+    const loginBtn = document.getElementById("login");
+
+    registerBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      authContainer.classList.add("active");
+    });
+
+    loginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      authContainer.classList.remove("active");
+    });
+
+    // Login form submit
     document.getElementById("login-form").addEventListener("submit", (e) => {
-      e.preventDefault(); // Ngăn form reload trang (default behavior)
-      this.handleLogin(); // Gọi method xử lý đăng nhập
+      e.preventDefault();
+      this.handleLogin();
     });
 
-    // Gắn event listener cho link chuyển sang form đăng ký
-    document.getElementById("show-register").addEventListener("click", () => {
-      this.renderRegisterForm(); // Render form đăng ký
-    });
-  }
-
-  // Render form đăng ký
-  renderRegisterForm() {
-    const container = document.getElementById("auth-form-container");
-    container.innerHTML = `
-            <form id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label>Tên đăng nhập</label>
-                    <input type="text" id="register-username" required>
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="register-password" required>
-                </div>
-                <div class="form-group">
-                    <label>Xác nhận mật khẩu</label>
-                    <input type="password" id="register-confirm" required>
-                </div>
-                <div class="form-group">
-                    <label>Họ tên</label>
-                    <input type="text" id="register-fullname" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="register-email" required placeholder="example@gmail.com">
-                </div>
-                <button type="submit" class="btn btn-primary">Đăng ký</button>
-                <p class="auth-toggle" id="show-login">Đã có tài khoản? Đăng nhập</p>
-            </form>
-        `;
-
+    // Register form submit
     document.getElementById("register-form").addEventListener("submit", (e) => {
       e.preventDefault();
       this.handleRegister();
     });
+  }
 
-    document.getElementById("show-login").addEventListener("click", () => {
-      this.renderLoginForm();
-    });
+  // Deprecated - no longer used (kept for compatibility)
+  renderRegisterForm() {
+    this.renderLoginForm(); // Just render the combined form
   }
 
   // Xử lý đăng nhập với async/await (gọi API backend)
