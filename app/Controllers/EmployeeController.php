@@ -6,14 +6,23 @@
 
 require_once CONTROLLER_PATH . '/BaseController.php';
 require_once MODEL_PATH . '/EmployeeModel.php';
+require_once MODEL_PATH . '/UserModel.php';
+
+// Định nghĩa SERVICES_PATH nếu chưa có
+if (!defined('SERVICES_PATH')) {
+    define('SERVICES_PATH', APP_PATH . '/Services');
+}
+require_once SERVICES_PATH . '/EmailService.php';
 
 class EmployeeController extends BaseController
 {
     private $employeeModel;
+    private $userModel;
 
     public function __construct()
     {
         $this->employeeModel = new EmployeeModel();
+        $this->userModel = new UserModel();
     }
 
     /**
@@ -74,6 +83,51 @@ class EmployeeController extends BaseController
         $employeeId = $this->employeeModel->create($data);
 
         if ($employeeId) {
+            // Gửi email thông báo cho nhân viên mới
+            try {
+                $emailService = new EmailService();
+
+                // Kiểm tra xem nhân viên đã có tài khoản chưa
+                $existingUser = $this->userModel->findByEmail($data['email']);
+
+                if ($existingUser) {
+                    // Đã có tài khoản -> Gửi email thông báo đã được thêm vào hệ thống
+                    $emailService->sendEmployeeAddedEmail(
+                        $data['email'],
+                        $data['name'],
+                        $employeeId
+                    );
+                } else {
+                    // Chưa có tài khoản -> Gửi email mời đăng ký
+                    // (Có thể tạo tài khoản tự động hoặc gửi link đăng ký)
+                    $tempPassword = bin2hex(random_bytes(4)); // Tạo password tạm 8 ký tự
+
+                    // Tạo tài khoản tự động
+                    $userData = [
+                        'username' => strtolower(str_replace(' ', '', $data['name'])), // Remove spaces
+                        'password' => $tempPassword,
+                        'fullname' => $data['name'],
+                        'email' => $data['email'],
+                        'role' => 'employee'
+                    ];
+
+                    $userResult = $this->userModel->create($userData);
+
+                    if ($userResult && isset($userResult['user_id'])) {
+                        // Gửi email với thông tin đăng nhập
+                        $emailService->sendNewAccountEmail(
+                            $data['email'],
+                            $data['name'],
+                            $userData['username'],
+                            $tempPassword
+                        );
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("Email sending error when creating employee: " . $e->getMessage());
+                // Không fail việc tạo nhân viên nếu email gửi lỗi
+            }
+
             $this->sendSuccess(['id' => $employeeId], 'Employee created successfully');
         } else {
             $this->sendError('Failed to create employee', 500);

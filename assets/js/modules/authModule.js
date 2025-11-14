@@ -9,74 +9,148 @@ export class AuthModule {
   // Khởi tạo module
   init() {
     this.checkSession();
+    this.checkEmailVerification(); // Kiểm tra link verify từ email
   }
 
-  // Render form đăng nhập (sử dụng template literals và DOM manipulation)
+  // Kiểm tra URL có chứa token verify không
+  checkEmailVerification() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyToken = urlParams.get("verify");
+
+    if (verifyToken) {
+      this.verifyEmailToken(verifyToken);
+    }
+  }
+
+  // Gọi API verify email
+  async verifyEmailToken(token) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/auth/verify/${token}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("✅ Xác thực email thành công! Bạn có thể đăng nhập ngay.");
+      } else {
+        alert("❌ " + (data.message || "Token không hợp lệ hoặc đã hết hạn."));
+      }
+
+      // Xóa query string và reload trang login
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error("Verification error:", error);
+      alert("❌ Không thể kết nối đến server.");
+    }
+  }
+
+  // Render form đăng nhập (Modern Design)
   renderLoginForm() {
-    // Lấy element container để inject form
     const container = document.getElementById("auth-form-container");
-    // Sử dụng template literals (backticks) để tạo HTML string
-    container.innerHTML = `
-            <form id="login-form" class="auth-form">
-                <div class="form-group">
-                    <label>Tên đăng nhập</label>
-                    <input type="text" id="login-username" required>
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Đăng nhập</button>
-                <p class="auth-toggle" id="show-register">Chưa có tài khoản? Đăng ký</p>
-            </form>
-        `;
+    container.className = "auth-container"; // Reset class
 
-    // Gắn event listener cho form submit
+    container.innerHTML = `
+      <div class="form-container sign-in">
+        <form id="login-form" class="auth-form">
+          <h1>Đăng nhập</h1>
+          <div class="social-icons">
+            <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+          <span>hoặc sử dụng tài khoản hệ thống</span>
+          <div class="form-group">
+            <input type="text" id="login-username" placeholder="Tên đăng nhập" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="login-password" placeholder="Mật khẩu" required>
+          </div>
+          <a href="#">Quên mật khẩu?</a>
+          <button type="submit" class="btn">Đăng nhập</button>
+        </form>
+      </div>
+      
+      <div class="form-container sign-up">
+        <form id="register-form" class="auth-form">
+          <h1>Tạo tài khoản</h1>
+          <div class="social-icons">
+            <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+            <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+          <span>hoặc đăng ký bằng email</span>
+          <div class="form-group">
+            <input type="text" id="register-username" placeholder="Tên đăng nhập" required>
+          </div>
+          <div class="form-group">
+            <input type="text" id="register-fullname" placeholder="Họ và tên" required>
+          </div>
+          <div class="form-group">
+            <input type="email" id="register-email" placeholder="Email" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="register-password" placeholder="Mật khẩu" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="register-confirm" placeholder="Xác nhận mật khẩu" required>
+          </div>
+          <button type="submit" class="btn">Đăng ký</button>
+        </form>
+      </div>
+      
+      <div class="toggle-container">
+        <div class="toggle">
+          <div class="toggle-panel toggle-left">
+            <h1>Chào mừng trở lại!</h1>
+            <p>Đăng nhập để sử dụng đầy đủ tính năng của hệ thống</p>
+            <button class="hidden" id="login">Đăng nhập</button>
+          </div>
+          <div class="toggle-panel toggle-right">
+            <h1>Xin chào!</h1>
+            <p>Đăng ký tài khoản để sử dụng hệ thống quản lý nhân sự</p>
+            <button class="hidden" id="register">Đăng ký</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Toggle between login and register
+    const authContainer = container;
+    const registerBtn = document.getElementById("register");
+    const loginBtn = document.getElementById("login");
+
+    registerBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      authContainer.classList.add("active");
+    });
+
+    loginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      authContainer.classList.remove("active");
+    });
+
+    // Login form submit
     document.getElementById("login-form").addEventListener("submit", (e) => {
-      e.preventDefault(); // Ngăn form reload trang (default behavior)
-      this.handleLogin(); // Gọi method xử lý đăng nhập
+      e.preventDefault();
+      this.handleLogin();
     });
 
-    // Gắn event listener cho link chuyển sang form đăng ký
-    document.getElementById("show-register").addEventListener("click", () => {
-      this.renderRegisterForm(); // Render form đăng ký
-    });
-  }
-
-  // Render form đăng ký
-  renderRegisterForm() {
-    const container = document.getElementById("auth-form-container");
-    container.innerHTML = `
-            <form id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label>Tên đăng nhập</label>
-                    <input type="text" id="register-username" required>
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="register-password" required>
-                </div>
-                <div class="form-group">
-                    <label>Xác nhận mật khẩu</label>
-                    <input type="password" id="register-confirm" required>
-                </div>
-                <div class="form-group">
-                    <label>Họ tên</label>
-                    <input type="text" id="register-fullname" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Đăng ký</button>
-                <p class="auth-toggle" id="show-login">Đã có tài khoản? Đăng nhập</p>
-            </form>
-        `;
-
+    // Register form submit
     document.getElementById("register-form").addEventListener("submit", (e) => {
       e.preventDefault();
       this.handleRegister();
     });
+  }
 
-    document.getElementById("show-login").addEventListener("click", () => {
-      this.renderLoginForm();
-    });
+  // Deprecated - no longer used (kept for compatibility)
+  renderRegisterForm() {
+    this.renderLoginForm(); // Just render the combined form
   }
 
   // Xử lý đăng nhập với async/await (gọi API backend)
@@ -121,6 +195,7 @@ export class AuthModule {
     const password = document.getElementById("register-password").value;
     const confirm = document.getElementById("register-confirm").value;
     const fullname = document.getElementById("register-fullname").value.trim();
+    const email = document.getElementById("register-email").value.trim();
 
     // Validate: Kiểm tra mật khẩu và xác nhận khớp nhau
     if (password !== confirm) {
@@ -134,6 +209,13 @@ export class AuthModule {
       return;
     }
 
+    // Validate: Kiểm tra email hợp lệ
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      alert("Email không hợp lệ!");
+      return;
+    }
+
     try {
       // Gọi API register
       const response = await fetch(`${this.apiBaseUrl}/auth/register`, {
@@ -141,13 +223,15 @@ export class AuthModule {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password, fullname }),
+        body: JSON.stringify({ username, password, fullname, email }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert("Đăng ký thành công! Vui lòng đăng nhập.");
+        alert(
+          "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản."
+        );
         this.renderLoginForm();
       } else {
         alert(data.message || "Đăng ký thất bại!");
