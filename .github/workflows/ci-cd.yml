@@ -303,25 +303,18 @@ jobs:
           # Create deployment directory
           mkdir -p deploy
 
-          # Copy TẤT CẢ (trừ .git và node_modules)
+          # Copy CHỈ files cần thiết cho production
           cp -r assets deploy/
           cp -r app deploy/
           cp -r database deploy/
-          cp -r backup deploy/ 2>/dev/null || true
-          cp -r hostOld deploy/ 2>/dev/null || true
-          cp -r tests deploy/ 2>/dev/null || true
-          cp -r scripts deploy/ 2>/dev/null || true
-          cp -r doc deploy/ 2>/dev/null || true
 
-          # Copy files
+          # Copy essential files only
           cp index.html deploy/
           cp api.php deploy/
           cp .htaccess deploy/ 2>/dev/null || true
-          cp *.md deploy/ 2>/dev/null || true
-          cp *.json deploy/ 2>/dev/null || true
-          cp *.xml deploy/ 2>/dev/null || true
 
-          echo "✅ Đã copy files (trừ .md, tests)"
+          echo "✅ Deploy chỉ assets, app, database, index.html, api.php"
+          echo "❌ BỎ QUA: backup, hostOld, tests, doc, scripts, *.md"
           echo "📋 Files sẽ deploy:"
           ls -la deploy/
 
