@@ -336,7 +336,8 @@ jobs:
           # Incremental deployment - chỉ upload file thay đổi
           state-name: .ftp-deploy-sync-state.json
           dry-run: false
-          # Tự động xóa file trên server nếu đã xóa trong Git
+          # dangerous-clean-slate: false = Giữ incremental sync
+          # Action sẽ TỰ ĐỘNG xóa file đã xóa trong Git (mặc định)
           dangerous-clean-slate: false
           exclude: |
             **/.git*
@@ -344,7 +345,8 @@ jobs:
             **/node_modules/**
             **/*.md
             **/tests/**
-          log-level: standard
+            .ftp-deploy-sync-state.json
+          log-level: verbose
 
       - name: Deployment Complete
         run: |
@@ -352,11 +354,13 @@ jobs:
           echo "  ✅ INCREMENTAL DEPLOY THÀNH CÔNG"
           echo "================================================"
           echo "🌐 Website: https://alexstudio.id.vn"
-          echo "⚡ Chỉ upload files đã thay đổi (nhanh hơn!)"
+          echo "⚡ Smart Sync - Chỉ cập nhật thay đổi"
           echo "================================================"
-          echo "✅ Upload: Code thay đổi, assets, database"
-          echo "❌ Bỏ qua: *.md, .git, tests/"
-          echo "🗑️  Tự động xóa: Files đã xóa trong Git"
+          echo "📤 Upload: Files mới & đã sửa"
+          echo "🗑️  Xóa: Files đã xóa trong Git"
+          echo "⏩ Giữ nguyên: Files không thay đổi"
+          echo "================================================"
+          echo "✅ Không cần xóa toàn bộ - Deploy nhanh hơn!"
           echo "================================================"
 
   # ============================================
