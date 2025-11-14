@@ -9,9 +9,9 @@ class Database
 {
     // Thông tin kết nối database - CẬP NHẬT CHO HOSTING
     private $host = "localhost"; // Thường là localhost trên shared hosting
-    private $db_name = "qeuvbmow_hrm_system"; // Tên database trên hosting
-    private $username = "qeuvbmow_hrm_system"; // Username từ hosting
-    private $password = "ZdvtMh4aYDnvPbu8N4WU"; // Password từ hosting
+    private $db_name = "dovanhf781mp_HRM"; // Tên database trên hosting
+    private $username = "dovanhf781mp_HRM"; // Username từ hosting
+    private $password = "hV0ougjobFOf"; // Password từ hosting
     private $conn = null;
 
         // Thông tin kết nối database - CẬP NHẬT CHO Localhost
